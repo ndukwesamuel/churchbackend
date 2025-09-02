@@ -38,21 +38,6 @@ export class AuthService {
     });
     const userProfile = new churchprofileModel({ user: user._id });
 
-    // // await userprofileModel.create(
-    // //   [
-    // //     {
-    // //       user: user[0]._id,
-    // //     },
-    // //   ],
-    // //   { session }
-    // // );
-
-    // // const emailInfo = await mailService.sendOTPViaEmail(
-    // //   user.email,
-    // //   "-"
-    // //   user.fullName
-    // // );
-
     await user.save();
     await userProfile.save();
 
@@ -69,26 +54,20 @@ export class AuthService {
   static async churchlogin(userData: LoginDTO) {
     const { email, password } = userData;
 
-    const adminUser = await userModel.find();
+    const user = await churchModel.findOne({ email }).select("+password");
+    await comparePassword(password, user.password as string);
 
-    // // const user = await userModel.findOne({ email }).select("+password");
-    const user = await UserService.findChurchByEmail(email);
+    // const user = await UserService.findChurchByEmail(email);
 
-    // await comparePassword(password, user.password as string);
+    if (!user.isVerified) {
+      throw ApiError.forbidden("Email Not Verified");
+    }
+    const token = generateToken({ userId: user._id });
 
-    // if (!user.isVerified) {
-    //   throw ApiError.forbidden("Email Not Verified");
-    // }
-    // const token = generateToken({ userId: user._id });
-
-    // return ApiSuccess.ok("Login Successful", {
-    //   user: { email: user.email, id: user._id },
-    //   token,
-    // });
-    return {
-      user,
-      adminUser,
-    };
+    return ApiSuccess.ok("Login Successful", {
+      user: { email: user.email, id: user._id },
+      token,
+    });
   }
 
   static async register(userData: RegisterDTO) {
