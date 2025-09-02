@@ -1,8 +1,10 @@
 export interface RegisterDTO {
+  fullName: string;
+  churchName: string;
+  churchType: string;
+  pastorName: string;
   email: string;
   password: string;
-  firstName?: string;
-  [key: string]: any;
 }
 
 export interface LoginDTO {

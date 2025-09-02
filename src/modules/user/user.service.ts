@@ -8,23 +8,23 @@ import churchModel from "../church/church.model";
 import type { IChurch } from "../church/church.interface";
 
 class UserService {
-  static async createUser(userData: RegisterDTO): Promise<IUser> {
-    const { password, email, phoneNumber, userName, lastName } = userData;
+  // static async createUser(userData: RegisterDTO): Promise<IUser> {
+  //   const { password, email, phoneNumber, userName, lastName } = userData;
 
-    const hashedPassword = await hashPassword(password);
+  //   const hashedPassword = await hashPassword(password);
 
-    const user = new User({
-      userName,
-      lastName,
-      phoneNumber,
-      email,
-      password: hashedPassword,
-    });
+  //   const user = new User({
+  //     userName,
+  //     lastName,
+  //     phoneNumber,
+  //     email,
+  //     password: hashedPassword,
+  //   });
 
-    await user.save();
+  //   await user.save();
 
-    return user;
-  }
+  //   return user;
+  // }
   static async findUserByEmail(email: string): Promise<IUser> {
     const user = await User.findOne({ email }).select("+password");
     if (!user) {

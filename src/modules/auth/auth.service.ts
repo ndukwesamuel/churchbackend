@@ -1,4 +1,3 @@
-import User from "../user/user.model.js";
 import OTP from "../otp/otp.model.js";
 import type {
   LoginDTO,
@@ -13,131 +12,68 @@ import { generateToken } from "../../config/token.js";
 import logger from "../../utils/logger.js";
 import { mailService } from "../../services/mail.service.js";
 import type { ObjectId } from "mongoose";
-import userprofileModel from "../churchprofile/churchprofile.model.js";
 import userModel from "../user/user.model.js";
 import churchModel from "../church/church.model.js";
-import churchprofileModel from "../churchprofile/churchprofile.model.js";
-
+import { ChurchService } from "../church/church.service.js";
 export class AuthService {
   static async churchRegister(userData: RegisterDTO) {
-    const { password, email, churchName, pastorName } = userData;
-
-    await UserService.checkIfChurchExists(email);
-
-    // console.log({ userData });
-
+    const { fullName, churchType, password, email, churchName, pastorName } =
+      userData;
+    const firstName = fullName.split(" ")[0];
+    await ChurchService.checkIfChurchExists(email);
+    console.log({ userData });
     const hashedPassword = await hashPassword(password);
-
-    // console.log({ hashedPassword });
 
     const user = new churchModel({
       password: hashedPassword,
+      churchType,
+      fullName,
       email,
       churchName,
       pastorName,
     });
-    const userProfile = new churchprofileModel({ user: user._id });
 
-    // // await userprofileModel.create(
-    // //   [
-    // //     {
-    // //       user: user[0]._id,
-    // //     },
-    // //   ],
-    // //   { session }
-    // // );
-
-    // // const emailInfo = await mailService.sendOTPViaEmail(
-    // //   user.email,
-    // //   "-"
-    // //   user.fullName
-    // // );
-
+    // const emailInfo = await mailService.sendOTPViaEmail(user.email, firstName!);
+    // console.log({ emailInfo });
     await user.save();
-    await userProfile.save();
 
     user.password = undefined;
 
     // console.log({ user });
     return ApiSuccess.created(
-      `Registration Successful, `,
-      // OTP has been sent to ${emailInfo.envelope.to}`,
-      { user, userProfile }
+      `Registration Successful`
+      // `OTP has been sent to ${emailInfo.envelope.to}`
     );
   }
 
   static async churchlogin(userData: LoginDTO) {
     const { email, password } = userData;
 
-    const adminUser = await userModel.find();
+    const user = await ChurchService.findChurchByEmail(email);
 
-    // // const user = await userModel.findOne({ email }).select("+password");
-    const user = await UserService.findChurchByEmail(email);
-
-    // await comparePassword(password, user.password as string);
+    await comparePassword(password, user.password as string);
 
     // if (!user.isVerified) {
     //   throw ApiError.forbidden("Email Not Verified");
     // }
-    // const token = generateToken({ userId: user._id });
-
-    // return ApiSuccess.ok("Login Successful", {
-    //   user: { email: user.email, id: user._id },
-    //   token,
-    // });
-    return {
-      user,
-      adminUser,
-    };
-  }
-
-  static async register(userData: RegisterDTO) {
-    const { password, email, fullName } = userData;
-
-    await UserService.checkIfUserExists(email);
-
-    console.log({ userData });
-
-    const hashedPassword = await hashPassword(password);
-
-    console.log({ hashedPassword });
-
-    const user = new User({ email, password: hashedPassword, fullName });
-    const userProfile = new userprofileModel({ user: user._id });
-
-    let dataa = await user.save();
-    await userProfile.save();
-
-    user.password = undefined;
-
-    console.log({ user });
-    return ApiSuccess.created(
-      `Registration Successful, `,
-      // OTP has been sent to ${emailInfo.envelope.to}`,
-      { dataa, userProfile }
-    );
-  }
-
-  static async login(userData: LoginDTO) {
-    const { email, password } = userData;
-    // const user = await userModel.findOne({ email }).select("+password");
-    const user = await UserService.findUserByEmail(email);
-
-    await comparePassword(password, user.password as string);
-
-    if (!user.isVerified) {
-      throw ApiError.forbidden("Email Not Verified");
-    }
     const token = generateToken({ userId: user._id });
+    const userDetails = {
+      id: user._id,
 
+      churchType: user.churchType,
+      churchName: user.churchName,
+      pastorName: user.pastorName,
+      fullName: user.fullName,
+      email: user.email,
+    };
     return ApiSuccess.ok("Login Successful", {
-      user: { email: user.email, id: user._id },
+      user: userDetails,
       token,
     });
   }
 
   static async getUser(userId: ObjectId) {
-    const user = await UserService.findUserById(userId);
+    const user = await ChurchService.findChurchById(userId);
     user.password = undefined;
     return ApiSuccess.ok("User Retrieved Successfully", {
       user,
@@ -145,7 +81,7 @@ export class AuthService {
   }
 
   static async sendOTP({ email }: { email: string }) {
-    const user = await UserService.findUserByEmail(email);
+    const user = await ChurchService.findChurchByEmail(email);
     if (user.isVerified) {
       return ApiSuccess.ok("User Already Verified");
     }
@@ -160,7 +96,7 @@ export class AuthService {
   }
 
   static async verifyOTP({ email, otp }: OTPData) {
-    const user = await UserService.findUserByEmail(email);
+    const user = await ChurchService.findChurchByEmail(email);
     if (user.isVerified) {
       return ApiSuccess.ok("User Already Verified");
     }
@@ -174,13 +110,13 @@ export class AuthService {
   }
 
   static async forgotPassword({ email }: { email: string }) {
-    const userProfile = await UserService.findUserByEmail(email);
+    const userProfile = await ChurchService.findChurchByEmail(email);
     const emailInfo = await mailService.sendOTPViaEmail(userProfile.email, "");
     return ApiSuccess.ok(`OTP has been sent to ${emailInfo.envelope.to}`);
   }
 
   static async resetPassword({ email, otp, password }: ResetPasswordDTO) {
-    const user = await UserService.findUserByEmail(email);
+    const user = await ChurchService.findChurchByEmail(email);
     const otpExists = await OTP.findOne({ email, otp });
     if (!otpExists) {
       throw ApiError.badRequest("Invalid or Expired OTP");

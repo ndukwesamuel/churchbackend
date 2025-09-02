@@ -67,7 +67,7 @@ class MailService {
 
   public async sendOTPViaEmail(
     email: string,
-    userName: string
+    firstName: string
   ): Promise<SentMessageInfo> {
     await OTP.findOneAndDelete({ email });
 
@@ -76,10 +76,10 @@ class MailService {
 
     const subject = "OTP Request";
     const date = new Date().toLocaleString();
-    const emailText = `Hello ${userName},\n\nYour OTP is: ${otp}`;
+    const emailText = `Hello ${firstName},\n\nYour OTP is: ${otp}`;
 
     const html = MailService.loadTemplate("OTPTemplate", {
-      userName,
+      firstName,
       otp,
       date,
     });

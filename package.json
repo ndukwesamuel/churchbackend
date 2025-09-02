@@ -21,6 +21,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/handlebars": "^4.1.0",
@@ -29,6 +30,7 @@
     "@types/nodemailer": "^6.4.17",
     "@types/otp-generator": "^4.0.2",
     "cloudinary": "^2.7.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "envalid": "^8.0.0",

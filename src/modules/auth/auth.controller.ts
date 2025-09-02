@@ -1,27 +1,20 @@
 import type { Request, Response } from "express";
-import { AuthService } from "./auth.service.js";
-import type { AuthenticatedUser } from "../user/user.interface.js";
-
+import { AuthService } from "./auth.service";
+import type { AuthenticatedUser } from "../user/user.interface";
+import { env } from "../../config/env.config";
 export class AuthController {
-  static async churchregister(req: Request, res: Response) {
+  static async churchRegister(req: Request, res: Response) {
     const userData = req.body;
     const result = await AuthService.churchRegister(userData);
     res.status(201).json(result);
   }
 
-  static async login(req: Request, res: Response) {
+  static async churchLogin(req: Request, res: Response) {
     const userData = req.body;
     const result = await AuthService.churchlogin(userData);
+
     res.status(200).json(result);
   }
-  // Register user
-  static async register(req: Request, res: Response) {
-    const userData = req.body;
-    const result = await AuthService.register(userData);
-    res.status(201).json(result);
-  }
-
-  // Login user
 
   // Get user data
   static async getUser(req: Request, res: Response) {

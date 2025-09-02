@@ -16,13 +16,15 @@ import authRoutes from "./modules/auth/auth.routes";
 import v1rootRouter from "./v1route";
 import { errorMiddleware } from "./middleware/error";
 import fileUpload from "express-fileupload";
+import cookieParser from "cookie-parser";
 
 const app = express();
+app.use(cookieParser());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(morgan("dev"));
-app.use(morgan("test"));
+app.use(morgan("dev"));
+// app.use(morgan("test"));
 
 app.use(
   cors({

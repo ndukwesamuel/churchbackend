@@ -3,7 +3,17 @@ import type { IChurch } from "./church.interface";
 
 const ChurchSchema: Schema<IChurch> = new Schema(
   {
+    churchType: {
+      type: String,
+      trim: true,
+      required: [true, "Please provide a church type"],
+    },
     churchName: {
+      type: String,
+      trim: true,
+      required: [true, "Please provide a church name"],
+    },
+    fullName: {
       type: String,
       trim: true,
       required: [true, "Please provide a username"],

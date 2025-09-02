@@ -9,26 +9,16 @@ import { churchSchema } from "../church/church.schema.js";
 
 const router = express.Router();
 
-router
-  .route("/")
-  .get((req, res) => {
-    res.status(200).json({
-      status: "success",
-      message: "Welcome to the API login",
-    });
-  })
-  .all(methodNotAllowed);
-
-// router.route("/").get(isAuth, AuthController.getUser).all(methodNotAllowed);
+router.route("/").get(isAuth, AuthController.getUser).all(methodNotAllowed);
 
 router
   .route("/signup")
-  .post(validateBody(churchSchema), AuthController.churchregister)
+  .post(validateBody(churchSchema), AuthController.churchRegister)
   .all(methodNotAllowed);
 
 router
   .route("/signin")
-  .post(validateBody(AuthSchemas.login), AuthController.login)
+  .post(validateBody(AuthSchemas.login), AuthController.churchLogin)
   .all(methodNotAllowed);
 
 router

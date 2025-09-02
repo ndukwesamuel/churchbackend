@@ -5,12 +5,12 @@ import type { Document, ObjectId } from "mongoose";
 export interface IChurch extends Document {
   churchName: string;
   pastorName: string;
+  churchType: string;
+  fullName: string;
   email: string;
-  // phoneNumber: string;
   password: string | undefined;
   isActive: boolean;
   isVerified: boolean;
-  // roles: UserRolesEnum;
 }
 
 // export interface AuthenticatedUser {
