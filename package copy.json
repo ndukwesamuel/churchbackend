@@ -7,8 +7,8 @@
   "private": true,
   "scripts": {
     "build": "bun build src/index.ts --outdir=dist --minify",
-    "start": "bun src/index.ts | pino-pretty",
-    "dev": "bun watch src/index.ts --outdir=dist | pino-pretty",
+    "start": "bun run build --target=bun && bun run dist/index.js | pino-pretty",
+    "dev": "nodemon --watch src --ext ts --exec bun run /src/index.ts | pino-pretty",
     "test": "bun test",
     "lint": "bun run lint"
   },
