@@ -13,7 +13,6 @@ export class TemplateController {
 
   static async getAllTemplates(req: Request, res: Response) {
     const { userId } = req.user as AuthenticatedUser;
-
     const parsed = TemplateSchemas.getTemplatesQuerySchema.safeParse(req.query);
     if (!parsed.success) {
       throw ApiError.badRequest("Invalid query parameters");

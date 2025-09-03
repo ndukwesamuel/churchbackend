@@ -10,8 +10,9 @@ export class TemplateSchemas {
       .array(z.enum(["email", "whatsapp", "sms"]))
       .min(1, "At least one channel is required"),
     content: z.string().min(1, "Content is required"),
+    category: z.string().min(1, "Category is required"),
     note: z.string().optional(),
-    variables: z.array(z.string()).optional().default([]),
+    variables: z.array(this.variableSchema).optional().default([]),
   });
 
   // Update template schema (all fields optional except user)
@@ -22,8 +23,10 @@ export class TemplateSchemas {
       .min(1, "At least one channel is required")
       .optional(),
     content: z.string().min(1, "Content is required").optional(),
+    category: z.string().min(1, "Category is required"),
+
     note: z.string().optional(),
-    variables: z.array(z.string()).optional().default([]),
+    variables: z.array(this.variableSchema).optional().default([]),
   });
   static getTemplatesQuerySchema = z.object({
     page: z

@@ -13,15 +13,17 @@ export class TemplateService {
     userId: ObjectId,
     templateData: CreateTemplateDTO
   ) {
-    const { name, channels, content, note, variables } = templateData;
+    console.log(templateData);
+    const { name, channels, category, content, note, variables } = templateData;
 
     const template = await Template.create({
       user: userId,
       name,
       channels,
       content,
+      category,
       note,
-      variables: variables.map((variable) => variable) || [],
+      variables: variables.map((variable) => variable.placeholder) || [],
     });
 
     return ApiSuccess.created("Template created successfully", template);
