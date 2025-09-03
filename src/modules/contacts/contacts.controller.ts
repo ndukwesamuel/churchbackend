@@ -18,6 +18,13 @@ export class ContactsController {
     res.status(200).json(result);
   }
 
+  static async deleteOneContact(req: Request, res: Response) {
+    const { userId } = req.user as AuthenticatedUser;
+    const { id } = req.params;
+    const result = await ContactsService.deleteOneContact(userId, id);
+    res.status(200).json(result);
+  }
+
   // ✅ Delete all contacts
   static async deleteAllContacts(req: Request, res: Response) {
     const result = await ContactsService.deleteAllContacts();

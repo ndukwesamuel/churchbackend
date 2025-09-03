@@ -35,6 +35,14 @@ class ContactsService {
 
     return ApiSuccess.ok("Contact created successfully", { contact });
   }
+
+  static async deleteOneContact(userId: ObjectId, id: any) {
+    const deletedContact = await contactsModel.findByIdAndDelete(id);
+    if (!deletedContact) {
+      throw ApiError.notFound("Contact not found");
+    }
+    return ApiSuccess.ok("Contact deleted successfully");
+  }
   // ✅ Delete all contacts
   static async deleteAllContacts() {
     await contactsModel.deleteMany({});

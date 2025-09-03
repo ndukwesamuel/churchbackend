@@ -12,6 +12,15 @@
     "test": "bun test",
     "lint": "bun run lint"
   },
+
+  "scripts": {
+  "build": "bun build src/index.ts --outdir=dist --minify",
+  "start": "bun src/index.ts | pino-pretty",
+  "dev": "bun watch src/index.ts --outdir=dist | pino-pretty",
+  "test": "bun test",
+  "lint": "bun run lint"
+}
+
   "devDependencies": {
     "@types/bun": "latest",
     "@types/express-fileupload": "^1.5.1",
