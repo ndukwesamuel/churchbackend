@@ -16,7 +16,6 @@ const ContactSchema: Schema<IContacts> = new Schema(
     },
     group: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "ChurchProfile.groups", // subdocument reference
     },
     email: {
       type: String,
@@ -27,6 +26,12 @@ const ContactSchema: Schema<IContacts> = new Schema(
         "Please provide a valid email address",
       ],
     },
+    status: {
+      type: String,
+      enum: ["active", "inactive", "pending"],
+      default: "active",
+    },
+
     phoneNumber: {
       type: String,
       required: [true, "Please provide a phone number"],

@@ -6,6 +6,7 @@ export interface IUserProfile extends Document {
   // fullName: string;
   // lastName: string;
   // email: string;
+  memberCount: number;
   phoneNumber: string;
   groups: {
     name: string;

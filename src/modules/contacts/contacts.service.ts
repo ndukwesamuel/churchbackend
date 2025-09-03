@@ -4,7 +4,7 @@ import { hashPassword } from "../../utils/validationUtils";
 import type { RegisterDTO } from "../auth/auth.interface";
 // import type { IUserProfile } from "./churchprofile.interface";
 import churchModel from "../church/church.model";
-import churchprofileModel from "./contacts.model";
+
 import contactsModel from "./contacts.model";
 import type { IContacts } from "./contacts.interface";
 // import type { IUser } from "./churchprofile.interface";
@@ -13,23 +13,11 @@ import type { IContacts } from "./contacts.interface";
 class ContactsService {
   static async getChurchContact(userId: ObjectId) {
     const user = await ContactsService.findALLChurchMembersContact(userId);
-    return ApiSuccess.ok("User Retrieved Successfully", {
-      user,
+    return ApiSuccess.ok("Church Member Retrieved Successfully", {
+      memberCount: user.length,
+      members: user,
     });
   }
-
-  // static async createContact(userId: ObjectId, contactData: any) {
-  //   const contact = await contactsModel.create({
-  //     user: userId,
-  //     fullName: contactData.fullName,
-  //     email: contactData.email,
-  //     phoneNumber: contactData.phoneNumber,
-  //     group: contactData.group || "", // optional group
-  //   });
-  //   return ApiSuccess.ok("User Retrieved Successfully", {
-  //     contact,
-  //   });
-  // }
 
   static async createContact(userId: ObjectId, contactData: any) {
     const contactPayload: any = {
@@ -99,15 +87,10 @@ class ContactsService {
 
   static async findALLChurchMembersContact(
     userId: ObjectId
-  ): Promise<IContacts> {
-    const user = await churchprofileModel
-      .findOne({ user: userId })
-      .populate("user");
-    // .populate("group");
-    if (!user) {
-      throw ApiError.notFound("User Not Found");
-    }
-    return user;
+  ): Promise<IContacts[]> {
+    return await contactsModel
+      .find({ user: userId })
+      .populate("user", "churchName pastorName email");
   }
 }
 

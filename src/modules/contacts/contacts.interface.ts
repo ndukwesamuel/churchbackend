@@ -10,6 +10,7 @@ export interface IContacts extends Document {
   phoneNumber: string; // required phone number
   createdAt: Date; // from timestamps
   updatedAt: Date; // from timestamps
+  status: "active" | "inactive" | "pending"; // contact status
 }
 
 // export interface AuthenticatedUser {

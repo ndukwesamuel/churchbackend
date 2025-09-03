@@ -26,7 +26,7 @@ const router = express.Router();
 
 router
   .route("/")
-  .get(isAuth, ContactsController.getChurchProfile)
+  .get(isAuth, ContactsController.getChurchContact)
   .post(
     isAuth,
     // validateBody(churchSchema),

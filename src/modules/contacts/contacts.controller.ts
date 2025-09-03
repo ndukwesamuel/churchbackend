@@ -6,7 +6,7 @@ import ContactsService from "./contacts.service.js";
 
 export class ContactsController {
   // Get user data
-  static async getChurchProfile(req: Request, res: Response) {
+  static async getChurchContact(req: Request, res: Response) {
     const { userId } = req.user as AuthenticatedUser;
     const result = await ContactsService.getChurchContact(userId);
     res.status(200).json(result);
