@@ -33,6 +33,7 @@ router
 router
   .route("/:id")
   .delete(isAuth, ContactsController.deleteOneContact)
+  .patch(isAuth, ContactsController.updateContacts)
   .all(methodNotAllowed);
 
 router
