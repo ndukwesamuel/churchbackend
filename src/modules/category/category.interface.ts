@@ -1,9 +1,9 @@
 import { Document } from "mongoose";
-export interface ITemplate extends Document {
+export interface ICategory extends Document {
   user: object;
   name: string;
   channels: [string];
-  category: object;
+  category: string;
   content: string;
   note?: string;
   variables?: [object];

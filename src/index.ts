@@ -16,7 +16,6 @@ import authRoutes from "./modules/auth/auth.routes";
 import v1rootRouter from "./v1route";
 import { errorMiddleware } from "./middleware/error";
 import fileUpload from "express-fileupload";
-
 const app = express();
 
 app.use(express.json());
@@ -27,7 +26,7 @@ app.use(morgan("dev"));
 app.use(
   cors({
     origin: "*", // allow all origins
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
@@ -62,6 +61,7 @@ app.use(errorMiddleware);
 const startServer = async () => {
   try {
     await connectDB();
+
     app.listen(env.PORT, () =>
       logger.info(`Server is listening on PORT:${env.PORT}`)
     );

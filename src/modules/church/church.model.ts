@@ -98,6 +98,4 @@ const ChurchSchema: Schema<IChurch> = new Schema(
   }
 );
 
-ChurchSchema.index({ email: 1 }, { unique: true });
-
 export default mongoose.model<IChurch>("Church", ChurchSchema);

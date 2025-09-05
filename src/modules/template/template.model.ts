@@ -14,9 +14,9 @@ const templateSchema = new Schema<ITemplate>(
       trim: true,
     },
     category: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "Category",
       required: true,
-      trim: true,
     },
 
     channels: [

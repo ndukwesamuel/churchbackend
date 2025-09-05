@@ -13,7 +13,6 @@ export class TemplateService {
     userId: ObjectId,
     templateData: CreateTemplateDTO
   ) {
-    console.log(templateData);
     const { name, channels, category, content, note, variables } = templateData;
 
     const template = await Template.create({
@@ -63,6 +62,7 @@ export class TemplateService {
       sort,
       populateOptions: [
         { path: "user", select: "churchName pastorName email" },
+        { path: "category", select: "name description icon" },
       ],
     });
 
