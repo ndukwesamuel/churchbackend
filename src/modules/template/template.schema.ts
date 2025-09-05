@@ -42,7 +42,9 @@ export class TemplateSchemas {
       .optional()
       .default("10"),
     search: z.string().optional(),
-    channel: z.enum(["email", "whatsapp", "sms"]).optional(),
+    channel: z.enum(["email", "whatsapp", "sms", ""]).optional(),
+    category: z.string().optional(),
+
     sortBy: z
       .enum(["name", "createdAt", "updatedAt"])
       .optional()

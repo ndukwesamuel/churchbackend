@@ -8,7 +8,7 @@ const router = express.Router();
 router
   .route("/")
   .post(
-    // validateBody(TemplateSchemas.createTemplateSchema),
+    validateBody(TemplateSchemas.createTemplateSchema),
     TemplateController.createTemplate
   )
   .get(TemplateController.getAllTemplates)
