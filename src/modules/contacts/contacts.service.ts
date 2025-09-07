@@ -35,11 +35,36 @@ class ContactsService {
 
     return ApiSuccess.ok("Contact created successfully", { contact });
   }
+
+  static async UpdateContact(userId: ObjectId, id: any, contactData: any) {
+    const updatedContact = await contactsModel.findByIdAndUpdate(
+      id,
+      contactData,
+      {
+        new: true, // return updated doc
+        runValidators: true, // apply schema validators
+      }
+    );
+    if (!updatedContact) {
+      throw ApiError.notFound("Contact not found");
+    }
+
+    return ApiSuccess.ok("Contact updated successfully", { updatedContact });
+  }
+
+  static async deleteOneContact(userId: ObjectId, id: any) {
+    const deletedContact = await contactsModel.findByIdAndDelete(id);
+    if (!deletedContact) {
+      throw ApiError.notFound("Contact not found");
+    }
+    return ApiSuccess.ok("Contact deleted successfully");
+  }
   // ✅ Delete all contacts
   static async deleteAllContacts() {
     await contactsModel.deleteMany({});
     return ApiSuccess.ok("All contacts deleted successfully", {});
   }
+
   // static async createUser(userData: RegisterDTO): Promise<IUser> {
   //   const { password, email, phoneNumber, userName, lastName } = userData;
   //   const hashedPassword = await hashPassword(password);

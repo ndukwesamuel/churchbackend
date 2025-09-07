@@ -27,11 +27,13 @@ const router = express.Router();
 router
   .route("/")
   .get(isAuth, ContactsController.getChurchContact)
-  .post(
-    isAuth,
-    // validateBody(churchSchema),
-    ContactsController.createContacts
-  )
+  .post(isAuth, ContactsController.createContacts)
+  .all(methodNotAllowed);
+
+router
+  .route("/:id")
+  .delete(isAuth, ContactsController.deleteOneContact)
+  .patch(isAuth, ContactsController.updateContacts)
   .all(methodNotAllowed);
 
 router
