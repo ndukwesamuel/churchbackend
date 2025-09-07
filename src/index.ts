@@ -16,18 +16,20 @@ import authRoutes from "./modules/auth/auth.routes";
 import v1rootRouter from "./v1route";
 import { errorMiddleware } from "./middleware/error";
 import fileUpload from "express-fileupload";
-
+import { seedCategories } from "./modules/category/seedcategory";
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(morgan("dev"));
-app.use(morgan("test"));
+app.use(morgan("dev"));
+// app.use(morgan("test"));
 
 app.use(
   cors({
     origin: "*", // allow all origins
+
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
@@ -62,6 +64,7 @@ app.use(errorMiddleware);
 const startServer = async () => {
   try {
     await connectDB();
+    // seedCategories();
     app.listen(env.PORT, () =>
       logger.info(`Server is listening on PORT:${env.PORT}`)
     );

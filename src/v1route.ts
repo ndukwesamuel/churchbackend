@@ -5,8 +5,9 @@ import churchRoutes from "./modules/churchprofile/churchprofile.routes";
 import contactsRoutes from "./modules/contacts/contacts.routes";
 import FilesRoutes from "./modules/fileManger/fileManger.routes";
 import AdminRoutes from "./modules/Admin/admin.routes";
-
+import TemplateRoutes from "./modules/template/template.route";
 import { isAuth } from "./middleware/auth";
+import CategoryRoutes from "./modules/category/category.route";
 // import methodNotAllowed from "../../middleware/methodNotAllowed.js";
 // import { AuthController } from "./auth.controller.js";
 // import { isAuth } from "../../middleware/auth.js";
@@ -31,6 +32,8 @@ router.use("/auth", authRoutes);
 router.use("/setting", churchRoutes);
 router.use("/contacts", isAuth, contactsRoutes);
 router.use("/collection", isAuth, FilesRoutes);
+router.use("/templates", isAuth, TemplateRoutes);
+router.use("/categories", isAuth, CategoryRoutes);
 
 // router.route("/").get(isAuth, AuthController.getUser).all(methodNotAllowed);
 
