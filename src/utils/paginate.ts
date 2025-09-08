@@ -1,19 +1,20 @@
-import { Document, Model } from "mongoose";
+import type { Document, Model } from "mongoose";
 
-interface PaginateOptions {
-  model: Model<Document>;
+interface PaginateOptions<T extends Document> {
+  model: Model<T>;
   query?: Record<string, any>;
   page?: number;
   limit?: number;
   sort?: Record<string, any>;
-  populateOptions?: string[];
+  populateOptions?: any[];
   select?: string[];
   excludeById?: string | null;
   excludeField?: string;
+  projection?: Record<string, 1>;
 }
 
-interface PaginateResult {
-  documents: Document[];
+interface PaginateResult<T> {
+  documents: T[];
   pagination: {
     totalCount: number;
     filteredCount: number;
@@ -23,7 +24,7 @@ interface PaginateResult {
   };
 }
 
-export const paginate = async ({
+export const paginate = async <T extends Document>({
   model,
   query = {},
   page = 1,
@@ -33,7 +34,8 @@ export const paginate = async ({
   select = [],
   excludeById = null,
   excludeField = "_id",
-}: PaginateOptions): Promise<PaginateResult> => {
+  projection = {},
+}: PaginateOptions<T>): Promise<PaginateResult<T>> => {
   const skip = (page - 1) * limit;
 
   if (excludeById !== null) {
@@ -41,7 +43,7 @@ export const paginate = async ({
   }
 
   let queryBuilder = model
-    .find(query)
+    .find(query, projection)
     .skip(skip)
     .limit(limit)
     .sort(sort)
