@@ -7,12 +7,9 @@ import churchModel from "../church/church.model";
 import churchprofileModel from "./fileManger.model";
 import FileManager from "./fileManger.model";
 import type { IFile } from "./fileManger.interface";
-// import type { IContacts } from "./fileManger.interface";
-// import type { IUser } from "./churchprofile.interface";
-// import User from "./user.model";
+
 import { v2 as cloudinary } from "cloudinary";
 
-// Configure cloudinary - add this at the beginning of your file
 cloudinary.config({
   cloud_name: "dkzds0azx", // process.env.CLOUDINARY_CLOUD_NAME,
   api_key: "617445194715168", //process.env.CLOUDINARY_API_KEY,
@@ -68,151 +65,228 @@ class FileManagerService {
     });
   }
 
-
   static async AddFileTofolder(
     userId: ObjectId,
     folder_id: string,
-    imageData: any
+    imageFiles: any[]
   ) {
-    if (!folder_id) {
-      throw ApiError.badRequest("Folder ID is required");
-    }
+    try {
+      // Validate inputs
+      if (!folder_id) {
+        throw ApiError.badRequest("Folder ID is required");
+      }
 
-    if (!imageData || !imageData.images) {
-      throw ApiError.badRequest("No images uploaded");
-    }
+      if (!imageFiles || imageFiles.length === 0) {
+        throw ApiError.badRequest("No images uploaded");
+      }
 
-    const imageFiles = imageData.images;
-    const filesArray = Array.isArray(imageFiles) ? imageFiles : [imageFiles];
+      // Find user's file collection
+      const collection = await FileManager.findOne({ user: userId });
+      if (!collection) {
+        throw ApiError.notFound(
+          "User collection not found. Please create a collection first."
+        );
+      }
 
-    const collection = await FileManager.findOne({ user: userId });
-    if (!collection) {
-      throw ApiError.notFound("User collection not found");
-    }
+      // Find the specific folder
+      const folder = collection.photoFolders.id(folder_id);
+      if (!folder) {
+        throw ApiError.notFound("Folder not found");
+      }
 
-    const folder = collection.photoFolders.id(folder_id);
-    if (!folder) {
-      throw ApiError.notFound("Folder not found");
-    }
+      console.log(
+        `Uploading ${imageFiles.length} file(s) to folder: ${folder.name}`
+      );
 
-    const uploadedImages = await Promise.all(
-      imageFiles.map(async (file) => {
+      // ✅ Upload all files to Cloudinary
+      const uploadPromises = imageFiles.map(async (file, index) => {
         try {
+          console.log(`Uploading file ${index + 1}: ${file.name}`);
+
           const upload = await cloudinary.uploader.upload(file.tempFilePath, {
-            folder: "user_files",
-            resource_type: "auto",
+            folder: `user_files/${userId}/${folder.name}`, // ✅ Organize by user and folder
+            resource_type: "auto", // ✅ Handles images, videos, etc.
+            public_id: `${Date.now()}_${file.name.split(".")[0]}`, // ✅ Unique filename
+            overwrite: false, // ✅ Don't overwrite existing files
           });
 
           return {
-            url: upload.secure_url, // 👈 match schema
-            publicId: upload.public_id, // 👈 store this for easy deletion later
-            caption: file.name,
-            otherdata: upload,
+            url: upload.secure_url,
+            publicId: upload.public_id,
+            caption: file.name, // Original filename as caption
+            otherdata: {
+              originalName: file.name,
+              size: file.size,
+              mimetype: file.mimetype,
+              uploadedAt: new Date(),
+              cloudinaryData: {
+                width: upload.width,
+                height: upload.height,
+                format: upload.format,
+                bytes: upload.bytes,
+              },
+            },
           };
         } catch (err: any) {
-          console.error("Cloudinary upload failed:", err);
-          return null;
+          console.error(`Cloudinary upload failed for file ${file.name}:`, err);
+          return {
+            error: true,
+            fileName: file.name,
+            message: err.message || "Upload failed",
+          };
         }
-      })
-    );
+      });
 
-    // Filter successful uploads
-    const successful = uploadedImages.filter((img) => img !== null);
+      const uploadResults = await Promise.all(uploadPromises);
 
-    if (successful.length === 0) {
-      throw ApiError.badRequest("All uploads failed");
+      // ✅ Separate successful uploads from failed ones
+      const successfulUploads = uploadResults.filter(
+        (result: any) => !result.error
+      );
+      const failedUploads = uploadResults.filter((result: any) => result.error);
+
+      if (successfulUploads.length === 0) {
+        throw ApiError.badRequest("All file uploads failed. Please try again.");
+      }
+
+      // ✅ Add successful uploads to the folder
+      folder.photos.push(...successfulUploads);
+      await collection.save();
+
+      // ✅ Prepare response with detailed info
+      const response = {
+        folder: {
+          id: folder._id,
+          name: folder.name,
+          totalPhotos: folder.photos.length,
+          newlyAdded: successfulUploads.length,
+        },
+        uploadSummary: {
+          total: imageFiles.length,
+          successful: successfulUploads.length,
+          failed: failedUploads.length,
+        },
+        newPhotos: successfulUploads.map((photo: any) => ({
+          url: photo.url,
+          caption: photo.caption,
+          publicId: photo.publicId,
+        })),
+      };
+
+      // ✅ Include failed uploads info if any
+      if (failedUploads.length > 0) {
+        response.failedUploads = failedUploads.map((failed: any) => ({
+          fileName: failed.fileName,
+          reason: failed.message,
+        }));
+      }
+
+      const message =
+        failedUploads.length > 0
+          ? `${successfulUploads.length} files uploaded successfully, ${failedUploads.length} failed`
+          : `All ${successfulUploads.length} files uploaded successfully`;
+
+      return ApiSuccess.ok(message, response);
+    } catch (error: any) {
+      console.error("AddFileTofolder service error:", error);
+
+      if (error instanceof ApiError) {
+        throw error;
+      }
+
+      throw ApiError.badRequest(`Failed to upload files: ${error.message}`);
     }
-
-    // Push into folder
-    folder.photos.push(...successful);
-    await collection.save();
-
-    return ApiSuccess.ok("Files uploaded successfully", {
-      folder,
-      uploaded: successful.length,
-    });
   }
 
-  // static async createContact(userId: ObjectId, contactData: any) {
-  //   const contact = await contactsModel.create({
-  //     user: userId,
-  //     fullName: contactData.fullName,
-  //     email: contactData.email,
-  //     phoneNumber: contactData.phoneNumber,
-  //     group: contactData.group || "", // optional group
-  //   });
-  //   return ApiSuccess.ok("User Retrieved Successfully", {
-  //     contact,
-  //   });
-  // }
-  // static async createContact(userId: ObjectId, contactData: any) {
-  //   const contactPayload: any = {
-  //     user: userId,
-  //     fullName: contactData.fullName,
-  //     email: contactData.email,
-  //     phoneNumber: contactData.phoneNumber,
-  //   };
-  //   if (contactData.groupId) {
-  //     contactPayload.group = contactData.groupId; // ✅ only set if valid
-  //   }
-  //   const contact = await contactsModel.create(contactPayload);
-  //   return ApiSuccess.ok("Contact created successfully", { contact });
-  // }
-  // ✅ Delete all contacts
-  // static async deleteAllContacts() {
-  //   await contactsModel.deleteMany({});
-  //   return ApiSuccess.ok("All contacts deleted successfully", {});
-  // }
-  // static async createUser(userData: RegisterDTO): Promise<IUser> {
-  //   const { password, email, phoneNumber, userName, lastName } = userData;
-  //   const hashedPassword = await hashPassword(password);
-  //   const user = new User({
-  //     userName,
-  //     lastName,
-  //     phoneNumber,
-  //     email,
-  //     password: hashedPassword,
-  //   });
-  //   await user.save();
-  //   return user;
-  // }
-  // static async findUserByEmail(email: string): Promise<IUser> {
-  //   const user = await User.findOne({ email });
-  //   if (!user) {
-  //     throw ApiError.notFound("No user with this email");
-  //   }
-  //   return user;
-  // }
-  // static async findUserById(userId: ObjectId): Promise<IUser> {
-  //   const user = await User.findById(userId);
-  //   if (!user) {
-  //     throw ApiError.notFound("User Not Found");
-  //   }
-  //   return user;
-  // }
-  // static async isDuplicateGroupName(email: string): Promise<void> {
-  //   const user = await User.findOne({ email });
-  //   if (user) {
-  //     throw ApiError.badRequest("User with this email exists");
-  //   }
-  // }
-  // static isDuplicateGroupName(
-  //   groups: { name: string }[],
-  //   name: string
-  // ): boolean {
-  //   if (!groups || !Array.isArray(groups)) return false;
-  //   return groups.some(
-  //     (g) => g.name.trim().toLowerCase() === name.trim().toLowerCase()
-  //   );
-  // }
-  // static async findUserFile(userId: ObjectId): Promise<IFile> {
-  //   const  FileManagerData = await FileManager.findOne({ user: userId }).populate(
-  //     "user"
-  //   );
-  //   // .populate("group");
+  static async AddFileTofolderSingle(
+    userId: ObjectId,
+    folder_id: string,
+    imageFile: any // only one file
+  ) {
+    try {
+      // Validate inputs
+      if (!folder_id) {
+        throw ApiError.badRequest("Folder ID is required");
+      }
 
-  //   return FileManagerData;
-  // }
+      if (!imageFile) {
+        throw ApiError.badRequest("No image uploaded");
+      }
+
+      // Find user's file collection
+      const collection = await FileManager.findOne({ user: userId });
+      if (!collection) {
+        throw ApiError.notFound(
+          "User collection not found. Please create a collection first."
+        );
+      }
+
+      // Find the specific folder
+      const folder = collection.photoFolders.id(folder_id);
+      if (!folder) {
+        throw ApiError.notFound("Folder not found");
+      }
+
+      console.log(
+        `Uploading file: ${imageFile.name} to folder: ${folder.name}`
+      );
+
+      // ✅ Upload file to Cloudinary
+      const upload = await cloudinary.uploader.upload(imageFile.tempFilePath, {
+        folder: `user_files/${userId}/${folder.name}`, // ✅ Organize by user and folder
+        resource_type: "auto",
+        public_id: `${Date.now()}_${imageFile.name.split(".")[0]}`,
+        overwrite: false,
+      });
+
+      // ✅ Construct uploaded file object
+      const uploadedFile = {
+        url: upload.secure_url,
+        publicId: upload.public_id,
+        caption: imageFile.name,
+        otherdata: {
+          originalName: imageFile.name,
+          size: imageFile.size,
+          mimetype: imageFile.mimetype,
+          uploadedAt: new Date(),
+          cloudinaryData: {
+            width: upload.width,
+            height: upload.height,
+            format: upload.format,
+            bytes: upload.bytes,
+          },
+        },
+      };
+
+      // ✅ Save to folder
+      folder.photos.push(uploadedFile);
+      await collection.save();
+
+      const response = {
+        folder: {
+          id: folder._id,
+          name: folder.name,
+          totalPhotos: folder.photos.length,
+          newlyAdded: 1,
+        },
+        newPhoto: {
+          url: uploadedFile.url,
+          caption: uploadedFile.caption,
+          publicId: uploadedFile.publicId,
+        },
+      };
+
+      return ApiSuccess.ok("File uploaded successfully", response);
+    } catch (error: any) {
+      console.error("AddFileTofolder service error:", error);
+
+      if (error instanceof ApiError) {
+        throw error;
+      }
+
+      throw ApiError.badRequest(`Failed to upload file: ${error.message}`);
+    }
+  }
 
   static async findUserFile(userId: ObjectId): Promise<IFile | null> {
     const FileManagerData = await FileManager.findOne({

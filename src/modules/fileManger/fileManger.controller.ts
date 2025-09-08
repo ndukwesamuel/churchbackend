@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 // import { AuthService } from "./auth.service.js";
 import type { AuthenticatedUser } from "../user/user.interface.js";
 import ContactsService from "./fileManager.service.js";
+import { ApiError } from "../../utils/responseHandler.js";
 
 export class fileMangerController {
   static async GetAllFileManager(req: Request, res: Response) {
@@ -24,68 +25,113 @@ export class fileMangerController {
   }
 
   static async AddFileToFolders(req: Request, res: Response) {
-    const { userId } = req.user as AuthenticatedUser;
-    console.log({
-      fggg: req.body,
-    });
+    try {
+      const { userId } = req.user as AuthenticatedUser;
+      const { folder_id } = req.body;
 
-    const { folder_id } = req.body;
-    const image_data = req.files;
+      // Validate folder_id
+      if (!folder_id) {
+        throw ApiError.badRequest("Folder ID is required");
+      }
 
-    const result = await ContactsService.AddFileTofolder(
-      userId,
-      folder_id,
-      image_data
-    );
-    res.status(200).json(result);
+      // Check if files were uploaded
+      if (!req.files || !req.files.images) {
+        throw ApiError.badRequest("No images uploaded");
+      }
+
+      // ✅ Normalize single or multiple files to array
+      let imageFiles = req.files.images;
+      const imageArray = Array.isArray(imageFiles) ? imageFiles : [imageFiles];
+
+      // ✅ Validate file types (optional but recommended)
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      const invalidFiles = imageArray.filter(
+        (file) => !allowedTypes.includes(file.mimetype)
+      );
+
+      if (invalidFiles.length > 0) {
+        throw ApiError.badRequest(
+          "Only image files (JPEG, PNG, GIF, WebP) are allowed"
+        );
+      }
+
+      // ✅ Check file size (optional - e.g., 10MB limit per file)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      const oversizedFiles = imageArray.filter((file) => file.size > maxSize);
+
+      if (oversizedFiles.length > 0) {
+        throw ApiError.badRequest("File size should not exceed 10MB per image");
+      }
+
+      const result = await ContactsService.AddFileTofolder(
+        userId,
+        folder_id,
+        imageArray
+      );
+
+      res.status(200).json(result);
+    } catch (error) {
+      // Handle any errors that weren't caught by the service
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw ApiError.badRequest("Failed to upload files");
+    }
   }
 
-  // Get user data
-  // static async getChurchProfile(req: Request, res: Response) {
-  //   const { userId } = req.user as AuthenticatedUser;
-  //   const result = await ContactsService.getChurchContact(userId);
-  //   res.status(200).json(result);
-  // }
+  static async AddFileToFoldersSingle(req: Request, res: Response) {
+    try {
+      const { userId } = req.user as AuthenticatedUser;
+      const { folder_id } = req.body;
 
-  // // ✅ Delete all contacts
-  // static async deleteAllContacts(req: Request, res: Response) {
-  //   const result = await ContactsService.deleteAllContacts();
-  //   res.status(200).json(result);
-  // }
-  // static async login(req: Request, res: Response) {
-  //   const userData = req.body;
-  //   const result = await AuthService.churchlogin(userData);
-  //   res.status(200).json(result);
-  // }
-  // // Register user
-  // static async register(req: Request, res: Response) {
-  //   const userData = req.body;
-  //   const result = await AuthService.register(userData);
-  //   res.status(201).json(result);
-  // }
-  // // Login user
-  // // Send OTP
-  // static async sendOTP(req: Request, res: Response) {
-  //   const { email } = req.body;
-  //   const result = await AuthService.sendOTP({ email });
-  //   res.status(200).json(result);
-  // }
-  // // Verify OTP
-  // static async verifyOTP(req: Request, res: Response) {
-  //   const { email, otp } = req.body;
-  //   const result = await AuthService.verifyOTP({ email, otp });
-  //   res.status(200).json(result);
-  // }
-  // // Forgot password
-  // static async forgotPassword(req: Request, res: Response) {
-  //   const { email } = req.body;
-  //   const result = await AuthService.forgotPassword({ email });
-  //   res.status(200).json(result);
-  // }
-  // // Reset password
-  // static async resetPassword(req: Request, res: Response) {
-  //   const { email, otp, password } = req.body;
-  //   const result = await AuthService.resetPassword({ email, otp, password });
-  //   res.status(200).json(result);
-  // }
+      if (!folder_id) {
+        throw ApiError.badRequest("Folder ID is required");
+      }
+
+      if (!req.files || !req.files.image) {
+        throw ApiError.badRequest("No image uploaded");
+      }
+
+      const imageFile = req.files.image;
+
+      // ✅ Validate file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      if (!allowedTypes.includes(imageFile.mimetype)) {
+        throw ApiError.badRequest(
+          "Only image files (JPEG, PNG, GIF, WebP) are allowed"
+        );
+      }
+
+      // ✅ Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024;
+      if (imageFile.size > maxSize) {
+        throw ApiError.badRequest("File size should not exceed 10MB");
+      }
+
+      const result = await ContactsService.AddFileTofolderSingle(
+        userId,
+        folder_id,
+        imageFile
+      );
+
+      res.status(200).json(result);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw ApiError.badRequest("Failed to upload file");
+    }
+  }
 }
