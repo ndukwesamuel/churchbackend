@@ -21,6 +21,16 @@ export class ChurchProfileController {
     res.status(200).json(result);
   }
 
+  static async updateChurchProfile(req: Request, res: Response) {
+    const { userId } = req.user as AuthenticatedUser;
+    const groupData = req.body;
+    const result = await ChurchProfileService.updateChurchProfile(
+      userId,
+      groupData
+    );
+    res.status(200).json(result);
+  }
+
   // static async login(req: Request, res: Response) {
   //   const userData = req.body;
   //   const result = await AuthService.churchlogin(userData);

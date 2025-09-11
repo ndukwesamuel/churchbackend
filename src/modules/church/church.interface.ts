@@ -6,10 +6,13 @@ export interface IChurch extends Document {
   churchName: string;
   pastorName: string;
   email: string;
-  // phoneNumber: string;
+  phoneNumber: string;
   password: string | undefined;
   isActive: boolean;
   isVerified: boolean;
+  address?: string;
+  phone?: string;
+  website?: string;
   // roles: UserRolesEnum;
 }
 

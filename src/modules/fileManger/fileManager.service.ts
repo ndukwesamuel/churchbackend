@@ -20,9 +20,9 @@ class FileManagerService {
   static async allCollection(userId: ObjectId) {
     let existing = await FileManager.findOne({ user: userId });
 
-    if (!existing) {
-      throw ApiError.notFound("User Dont has a file collection");
-    }
+    // if (!existing) {
+    //   throw ApiError.notFound("User Dont has a file collection");
+    // }
 
     return ApiSuccess.ok("User Retrieved Successfully", {
       existing,

@@ -5,6 +5,7 @@ import type { RegisterDTO } from "../auth/auth.interface";
 import type { IUserProfile } from "./churchprofile.interface";
 import churchModel from "../church/church.model";
 import churchprofileModel from "./churchprofile.model";
+import userModel from "../user/user.model";
 // import type { IUser } from "./churchprofile.interface";
 // import User from "./user.model";
 
@@ -37,6 +38,38 @@ class ChurchProfileService {
     await churchProfile.save();
     return ApiSuccess.ok("User Retrieved Successfully", {
       groups: churchProfile.groups,
+    });
+  }
+
+  static async updateChurchProfile(userId: ObjectId, groupData: any) {
+    const { churchName, pastorName, address, email, phone, website } =
+      groupData;
+
+    const updates: Record<string, any> = {};
+
+    if (churchName !== undefined) updates.churchName = churchName;
+    if (pastorName !== undefined) updates.pastorName = pastorName;
+    if (address !== undefined) updates.address = address;
+    if (email !== undefined) updates.email = email;
+    if (phone !== undefined) updates.phone = phone;
+    if (website !== undefined) updates.website = website;
+
+    const updatedProfile = await churchModel.findByIdAndUpdate(
+      userId,
+      updates,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedProfile) {
+      throw ApiError.notFound("Profile Not Found");
+    }
+
+    return ApiSuccess.ok("Profile updated Successfully", {
+      data: updatedProfile,
+      userId,
     });
   }
   // static async createUser(userData: RegisterDTO): Promise<IUser> {
