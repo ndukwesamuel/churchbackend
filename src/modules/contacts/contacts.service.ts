@@ -1,21 +1,37 @@
 import type { ObjectId } from "mongoose";
 import { ApiError, ApiSuccess } from "../../utils/responseHandler";
-import { hashPassword } from "../../utils/validationUtils";
-import type { RegisterDTO } from "../auth/auth.interface";
-// import type { IUserProfile } from "./churchprofile.interface";
-import churchModel from "../church/church.model";
-
 import contactsModel from "./contacts.model";
 import type { IContacts } from "./contacts.interface";
-// import type { IUser } from "./churchprofile.interface";
-// import User from "./user.model";
-
+import type { IGroup } from "../group/group.interface";
 class ContactsService {
   static async getChurchContact(userId: ObjectId) {
-    const user = await ContactsService.findALLChurchMembersContact(userId);
+    const members = await this.findALLChurchMembersContact(userId);
+
+    // Count members by group
+    const groupCounts = members.reduce((acc, member) => {
+      const group = member.group;
+
+      // type guard: only count if it's a populated group
+      if (group && typeof group !== "string" && "_id" in group) {
+        const groupId = group._id.toString();
+        if (!acc[groupId]) {
+          acc[groupId] = {
+            groupId,
+            groupName: (group as IGroup).name,
+            count: 0,
+          };
+        }
+        acc[groupId].count += 1;
+      }
+
+      return acc;
+    }, {} as Record<string, { groupId: string; groupName: string; count: number }>);
+
     return ApiSuccess.ok("Church Member Retrieved Successfully", {
-      memberCount: user.length,
-      members: user,
+      memberCount: members.length,
+      members,
+      groupCounts: Object.values(groupCounts),
+      groupTotal: Object.keys(groupCounts).length,
     });
   }
 
@@ -26,7 +42,6 @@ class ContactsService {
       email: contactData.email,
       phoneNumber: contactData.phoneNumber,
     };
-
     if (contactData.groupId) {
       contactPayload.group = contactData.groupId; // ✅ only set if valid
     }
@@ -65,57 +80,13 @@ class ContactsService {
     return ApiSuccess.ok("All contacts deleted successfully", {});
   }
 
-  // static async createUser(userData: RegisterDTO): Promise<IUser> {
-  //   const { password, email, phoneNumber, userName, lastName } = userData;
-  //   const hashedPassword = await hashPassword(password);
-  //   const user = new User({
-  //     userName,
-  //     lastName,
-  //     phoneNumber,
-  //     email,
-  //     password: hashedPassword,
-  //   });
-  //   await user.save();
-  //   return user;
-  // }
-  // static async findUserByEmail(email: string): Promise<IUser> {
-  //   const user = await User.findOne({ email });
-  //   if (!user) {
-  //     throw ApiError.notFound("No user with this email");
-  //   }
-  //   return user;
-  // }
-  // static async findUserById(userId: ObjectId): Promise<IUser> {
-  //   const user = await User.findById(userId);
-  //   if (!user) {
-  //     throw ApiError.notFound("User Not Found");
-  //   }
-  //   return user;
-  // }
-  // static async isDuplicateGroupName(email: string): Promise<void> {
-  //   const user = await User.findOne({ email });
-
-  //   if (user) {
-  //     throw ApiError.badRequest("User with this email exists");
-  //   }
-  // }
-
-  // static isDuplicateGroupName(
-  //   groups: { name: string }[],
-  //   name: string
-  // ): boolean {
-  //   if (!groups || !Array.isArray(groups)) return false;
-  //   return groups.some(
-  //     (g) => g.name.trim().toLowerCase() === name.trim().toLowerCase()
-  //   );
-  // }
-
   static async findALLChurchMembersContact(
     userId: ObjectId
   ): Promise<IContacts[]> {
     return await contactsModel
       .find({ user: userId })
-      .populate("user", "churchName pastorName email");
+      .populate("user", "churchName pastorName email ")
+      .populate("group");
   }
 }
 

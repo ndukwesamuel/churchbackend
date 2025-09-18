@@ -4,7 +4,7 @@ import type { IContacts } from "./contacts.interface";
 const ContactSchema: Schema<IContacts> = new Schema(
   {
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Church",
       required: true,
       index: true, // <-- keep for faster lookup, but not unique
@@ -15,7 +15,8 @@ const ContactSchema: Schema<IContacts> = new Schema(
       required: [true, "Please provide a username"],
     },
     group: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
+      ref: "Groups",
     },
     email: {
       type: String,
