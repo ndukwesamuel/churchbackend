@@ -13,7 +13,7 @@ router
   .get(MessageController.getMessages);
 
 router
-  .route("/:d")
+  .route("/:id")
   .get(MessageController.getMessageById)
   .put(MessageController.updateMessage)
   .delete(MessageController.deleteMessage);

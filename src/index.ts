@@ -17,6 +17,7 @@ import v1rootRouter from "./v1route";
 import { errorMiddleware } from "./middleware/error";
 import fileUpload from "express-fileupload";
 import { seedCategories } from "./modules/category/seedcategory";
+import { agenda } from "./modules/scheduler/agenda.scheduler";
 const app = express();
 
 app.use(express.json());
@@ -64,6 +65,7 @@ app.use(errorMiddleware);
 const startServer = async () => {
   try {
     await connectDB();
+    await agenda.start();
     // seedCategories();
     app.listen(env.PORT, () =>
       logger.info(`Server is listening on PORT:${env.PORT}`)

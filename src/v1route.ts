@@ -9,7 +9,7 @@ import TemplateRoutes from "./modules/template/template.route";
 import { isAuth } from "./middleware/auth";
 import CategoryRoutes from "./modules/category/category.route";
 import GroupRoutes from "./modules/group/group.routes";
-
+import MessageRoutes from "./modules/message/message.route";
 const router = express.Router();
 
 router
@@ -30,5 +30,6 @@ router.use("/collection", isAuth, FilesRoutes);
 router.use("/templates", isAuth, TemplateRoutes);
 router.use("/categories", isAuth, CategoryRoutes);
 router.use("/groups", isAuth, GroupRoutes);
+router.use("/messages", isAuth, MessageRoutes);
 
 export default router;

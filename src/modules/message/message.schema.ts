@@ -19,48 +19,30 @@ export class MessageSchema {
       recipients: z
         .array(z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid Group ID"))
         .min(1, "At least one recipient group is required"),
-      status: z
-        .enum(["draft", "scheduled", "sent", "failed"])
-        .optional()
-        .default("draft"),
-
-      // FE will send these two when scheduling
-      scheduleDate: z.string().optional(),
-      scheduleTime: z.string().optional(),
-
+      status: z.enum(["draft", "scheduled", "sent", "failed"]),
+      scheduleAt: z.coerce.date().optional(),
       description: z.string().max(2000).optional(),
-    })
-    .transform((data) => {
-      // Convert scheduleDate + scheduleTime -> scheduleAt
-      let scheduleAt: Date | undefined;
-      if (data.scheduleDate && data.scheduleTime) {
-        scheduleAt = combineDateAndTime(data.scheduleDate, data.scheduleTime);
-      }
-
-      return { ...data, scheduleAt };
     })
     .superRefine((data, ctx) => {
       const now = new Date();
-      const status = data.status ?? "draft";
 
-      if (status === "scheduled") {
+      if (data.status === "scheduled") {
         if (!data.scheduleAt) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            path: ["scheduleDate"],
-            message:
-              "scheduleDate and scheduleTime are required when status = 'scheduled'",
+            path: ["scheduleAt"],
+            message: "scheduleAt is required when status = 'scheduled'",
           });
         } else if (data.scheduleAt <= now) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["scheduleAt"],
-            message: "scheduleAt must be a future date/time",
+            message: "scheduleAt must be in the future",
           });
         }
       }
 
-      if (status === "sent" && data.scheduleAt) {
+      if (data.status === "sent" && data.scheduleAt) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["scheduleAt"],

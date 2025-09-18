@@ -1,18 +1,20 @@
-// src/schedulers/agenda.scheduler.ts
 import Agenda from "agenda";
+import { env } from "../../config/env.config";
+import { MessageService } from "../message/message.service";
 
-const agenda = new Agenda({ db: { address: process.env.MONGO_URI! } });
+export const agenda = new Agenda({
+  db: { address: env.MONGODB_URI!, collection: "agendaJobs" },
+});
 
-// Register job (to be defined in a worker)
+// Define jobs
 agenda.define("sendScheduledMessage", async (job: any) => {
-  const { messageId } = job.attrs.data;
+  const { messageId } = job.attrs.data as { messageId: string };
   console.log(`⏰ Running scheduled job for message ${messageId}`);
-  // Here you'd call MessageService.sendScheduledMessage(messageId)
+  await MessageService.sendScheduledMessage(messageId);
 });
 
 export const AgendaScheduler = {
   async scheduleJob(messageId: string, scheduleAt: Date) {
-    await agenda.start();
     await agenda.schedule(scheduleAt, "sendScheduledMessage", { messageId });
   },
 };

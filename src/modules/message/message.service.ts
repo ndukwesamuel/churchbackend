@@ -6,9 +6,9 @@ import { AgendaScheduler } from "../scheduler/agenda.scheduler";
 import { MessageProvider } from "./message.provider";
 import type { IMessage } from "./message.interface";
 const COST_PER_TYPE: Record<string, number> = {
-  sms: 2,
-  whatsapp: 1,
-  email: 0.5,
+  sms: 3,
+  whatsapp: 3,
+  email: 2,
 };
 
 function dedupeContacts(contacts: any[]) {
@@ -20,15 +20,9 @@ function dedupeContacts(contacts: any[]) {
   return Array.from(seen.values());
 }
 
-async function resolveContacts(groupIds: string[]) {
-  return ContactModel.find({
-    group: { $in: groupIds },
-    status: "active",
-  }).lean();
-}
 export class MessageService {
   static async createMessage(data: any, userId: ObjectId) {
-    const rawContacts = await resolveContacts(data.recipients);
+    const rawContacts = await this.resolveContacts(data.recipients);
     const contacts = dedupeContacts(rawContacts);
     const totalRecipients = contacts.length;
     const totalCost = totalRecipients * (COST_PER_TYPE[data.messageType] ?? 0);
@@ -62,7 +56,6 @@ export class MessageService {
       return ApiSuccess.ok("Message scheduled successfully", { message });
     }
 
-    // Immediate Send
     if (data.status === "sent") {
       const message = await MessageModel.create({
         ...basePayload,
@@ -106,6 +99,59 @@ export class MessageService {
     throw ApiError.badRequest("Invalid status");
   }
 
+  static async sendScheduledMessage(messageId: string) {
+    const message = await MessageModel.findById(messageId);
+    if (!message) throw ApiError.notFound("Scheduled message not found");
+
+    // Skip if already sent or failed
+    if (["sent", "failed"].includes(message.status)) {
+      return { skipped: true };
+    }
+
+    // Load contacts from groups
+    const contacts = await ContactModel.find({
+      group: { $in: message.recipients },
+      status: "active",
+    }).lean();
+    const deduped = Array.from(
+      new Map(contacts.map((c) => [c.phoneNumber || c.email, c])).values()
+    );
+
+    // Deliver
+    const results = await Promise.allSettled(
+      deduped.map((c) => {
+        switch (message.messageType) {
+          case "sms":
+            return MessageProvider.sendSms(c, message.message);
+          case "whatsapp":
+            return MessageProvider.sendWhatsapp(c, message.message);
+          case "email":
+            return MessageProvider.sendEmail(c, message.message);
+          default:
+            return Promise.resolve(false);
+        }
+      })
+    );
+
+    const successCount = results.filter(
+      (r) => r.status === "fulfilled" && r.value
+    ).length;
+    const failCount = results.length - successCount;
+    const finalStatus = failCount > 0 ? "failed" : "sent";
+
+    // Update DB
+    message.status = finalStatus;
+    message.sentAt = new Date();
+    await message.save();
+
+    return { successCount, failCount, status: finalStatus };
+  }
+  static async resolveContacts(groupIds: string[]) {
+    return ContactModel.find({
+      group: { $in: groupIds },
+      status: "active",
+    }).lean();
+  }
   static async getMessages() {
     const messages = await MessageModel.find().populate("recipients");
     return ApiSuccess.ok("Messages fetched successfully", { messages });
