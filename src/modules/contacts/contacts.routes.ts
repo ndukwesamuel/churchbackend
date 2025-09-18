@@ -2,7 +2,6 @@ import express from "express";
 import methodNotAllowed from "../../middleware/methodNotAllowed.js";
 import { ContactsController } from "./contacts.controller.js";
 import { isAuth } from "../../middleware/auth.js";
-
 const router = express.Router();
 
 router

@@ -8,13 +8,8 @@ import AdminRoutes from "./modules/Admin/admin.routes";
 import TemplateRoutes from "./modules/template/template.route";
 import { isAuth } from "./middleware/auth";
 import CategoryRoutes from "./modules/category/category.route";
-// import methodNotAllowed from "../../middleware/methodNotAllowed.js";
-// import { AuthController } from "./auth.controller.js";
-// import { isAuth } from "../../middleware/auth.js";
-// import { userSchema } from "../user/user.schema.js";
-// import { AuthSchemas } from "./auth.schema.js";
-// import { validateBody } from "../../middleware/validateSchema.js";
-
+import GroupRoutes from "./modules/group/group.routes";
+import MessageRoutes from "./modules/message/message.route";
 const router = express.Router();
 
 router
@@ -34,37 +29,7 @@ router.use("/contacts", isAuth, contactsRoutes);
 router.use("/collection", isAuth, FilesRoutes);
 router.use("/templates", isAuth, TemplateRoutes);
 router.use("/categories", isAuth, CategoryRoutes);
-
-// router.route("/").get(isAuth, AuthController.getUser).all(methodNotAllowed);
-
-// router
-//   .route("/signup")
-//   .post(validateBody(userSchema), AuthController.register)
-//   .all(methodNotAllowed);
-
-// router
-//   .route("/signin")
-//   .post(validateBody(AuthSchemas.login), AuthController.login)
-//   .all(methodNotAllowed);
-
-// router
-//   .route("/send-otp")
-//   .post(validateBody(AuthSchemas.sendOTP), AuthController.sendOTP)
-//   .all(methodNotAllowed);
-
-// router
-//   .route("/verify-otp")
-//   .post(validateBody(AuthSchemas.verifyOTP), AuthController.verifyOTP)
-//   .all(methodNotAllowed);
-
-// router
-//   .route("/forgot-password")
-//   .post(validateBody(AuthSchemas.forgotPassword), AuthController.forgotPassword)
-//   .all(methodNotAllowed);
-
-// router
-//   .route("/reset-password")
-//   .post(validateBody(AuthSchemas.resetPassword), AuthController.resetPassword)
-//   .all(methodNotAllowed);
+router.use("/groups", isAuth, GroupRoutes);
+router.use("/messages", isAuth, MessageRoutes);
 
 export default router;

@@ -9,6 +9,7 @@ export interface IUserProfile extends Document {
   memberCount: number;
   phoneNumber: string;
   groups: {
+    _id?: string;
     name: string;
     description?: string;
     // leader?: ObjectId;
