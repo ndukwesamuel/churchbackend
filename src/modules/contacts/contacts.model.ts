@@ -16,7 +16,7 @@ const ContactSchema: Schema<IContacts> = new Schema(
     },
     group: {
       type: Schema.Types.ObjectId,
-      ref: "Groups",
+      ref: "Group",
     },
     email: {
       type: String,
