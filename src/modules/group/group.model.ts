@@ -16,4 +16,4 @@ const GroupSchema: Schema<IGroup> = new Schema(
   }
 );
 
-export default mongoose.model<IGroup>("Groups", GroupSchema);
+export default mongoose.model<IGroup>("Group", GroupSchema);

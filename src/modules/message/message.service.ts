@@ -57,76 +57,41 @@ export class MessageService {
       return ApiSuccess.ok("Message scheduled successfully", { message });
     }
 
+    // Sent
     if (data.status === "sent") {
+      // Create DB record first
       const message = await MessageModel.create({
         ...basePayload,
         status: "sent",
         sentAt: new Date(),
       });
 
-      let results: any[] = [];
-
+      // Directly delegate to the right provider
       switch (data.messageType) {
         case "sms":
-          results.push(
-            await MessageSender.sendBulkSMS(
-              contacts.map((c) => c.phoneNumber),
-              data.senderId,
-              data.message
-            )
+          return await MessageSender.sendBulkSMS(
+            contacts.map((c) => c.phoneNumber),
+            data.senderId,
+            data.message
           );
-          break;
 
         case "email":
-          // results.push(
-          //   await MessageSender.sendBulkEmail(
-          //     contacts.map((c) => c.email), // assuming contact has email
-          //     data.senderEmail,
-          //     data.subject,
-          //     data.message
-          //   )
-          // );
-          break;
+        // return await MessageSender.sendBulkEmail(
+        //   contacts.map((c) => c.email),
+        //   data.senderEmail,
+        //   data.subject,
+        //   data.message
+        // );
 
         case "whatsapp":
-          // results = await Promise.allSettled(
-          //   contacts.map((c) =>
-          //     MessageSender.sendWhatsapp(c.phone, data.message)
-          //   )
-          // );
-          break;
+        // return await MessageSender.sendBulkWhatsapp(
+        //   contacts.map((c) => c.phoneNumber),
+        //   data.message
+        // );
 
         default:
-          results = [];
+          throw ApiError.badRequest("Unsupported message type");
       }
-
-      // Count successes/failures
-      let successCount = 0;
-      let failCount = 0;
-
-      if (data.messageType === "whatsapp") {
-        successCount = results.filter(
-          (r) => r.status === "fulfilled" && r.value
-        ).length;
-        failCount = results.length - successCount;
-      } else {
-        // bulk SMS/Email returns once, so assume all delivered if success
-        successCount = contacts.length;
-        failCount = 0;
-      }
-
-      const finalStatus = failCount > 0 ? "failed" : "sent";
-
-      const updated = await MessageModel.findByIdAndUpdate(
-        message._id,
-        { status: finalStatus, sentAt: new Date() },
-        { new: true }
-      );
-
-      return ApiSuccess.ok("Message processed", {
-        message: updated,
-        sendSummary: { successCount, failCount },
-      });
     }
 
     throw ApiError.badRequest("Invalid status");
