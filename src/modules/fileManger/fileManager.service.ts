@@ -51,6 +51,7 @@ class FileManagerService {
     if (!collection) {
       throw ApiError.notFound("User collection not found");
     }
+
     const existingNames = collection.photoFolders.map((f) => f.name);
     const uniqueName = FileManagerService.generateUniqueName(
       name as string,
