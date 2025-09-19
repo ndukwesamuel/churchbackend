@@ -5,6 +5,7 @@ import type { ObjectId } from "mongoose";
 import { AgendaScheduler } from "../scheduler/agenda.scheduler";
 import { MessageProvider } from "./message.provider";
 import type { IMessage } from "./message.interface";
+import MessageSender from "../messgaing/message.service";
 const COST_PER_TYPE: Record<string, number> = {
   sms: 3,
   whatsapp: 3,
@@ -56,44 +57,41 @@ export class MessageService {
       return ApiSuccess.ok("Message scheduled successfully", { message });
     }
 
+    // Sent
     if (data.status === "sent") {
+      // Create DB record first
       const message = await MessageModel.create({
         ...basePayload,
         status: "sent",
         sentAt: new Date(),
       });
 
-      const results = await Promise.allSettled(
-        contacts.map((c) => {
-          switch (data.messageType) {
-            case "sms":
-              return MessageProvider.sendSms(c, data.message);
-            case "whatsapp":
-              return MessageProvider.sendWhatsapp(c, data.message);
-            case "email":
-              return MessageProvider.sendEmail(c, data.message);
-            default:
-              return Promise.resolve(false);
-          }
-        })
-      );
+      // Directly delegate to the right provider
+      switch (data.messageType) {
+        case "sms":
+          return await MessageSender.sendBulkSMS(
+            contacts.map((c) => c.phoneNumber),
+            data.senderId,
+            data.message
+          );
 
-      const successCount = results.filter(
-        (r) => r.status === "fulfilled" && r.value
-      ).length;
-      const failCount = results.length - successCount;
-      const finalStatus = failCount > 0 ? "failed" : "sent";
+        case "email":
+        // return await MessageSender.sendBulkEmail(
+        //   contacts.map((c) => c.email),
+        //   data.senderEmail,
+        //   data.subject,
+        //   data.message
+        // );
 
-      const updated = await MessageModel.findByIdAndUpdate(
-        message._id,
-        { status: finalStatus, sentAt: new Date() },
-        { new: true }
-      );
+        case "whatsapp":
+        // return await MessageSender.sendBulkWhatsapp(
+        //   contacts.map((c) => c.phoneNumber),
+        //   data.message
+        // );
 
-      return ApiSuccess.ok("Message processed", {
-        message: updated,
-        sendSummary: { successCount, failCount },
-      });
+        default:
+          throw ApiError.badRequest("Unsupported message type");
+      }
     }
 
     throw ApiError.badRequest("Invalid status");

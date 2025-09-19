@@ -21,6 +21,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@types/axios": "^0.14.4",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/handlebars": "^4.1.0",
@@ -28,11 +29,7 @@
     "@types/morgan": "^1.9.9",
     "@types/nodemailer": "^6.4.17",
     "@types/otp-generator": "^4.0.2",
-<<<<<<< HEAD
-    "axios": "^1.12.2",
-=======
     "agenda": "^5.0.0",
->>>>>>> 97d513ccace6e7ca80cf0eeecdc6c66126244920
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
