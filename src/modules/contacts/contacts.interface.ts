@@ -1,20 +1,13 @@
 import type { Document, ObjectId } from "mongoose";
-
-// export type UserRolesEnum = ("user" | "admin")[];
+import type { IGroup } from "../group/group.interface";
 
 export interface IContacts extends Document {
   user: ObjectId; // references the Church
-  fullName: string; // contact's full name
-  group?: string; // optional group
-  email?: string; // optional email
-  phoneNumber: string; // required phone number
-  createdAt: Date; // from timestamps
-  updatedAt: Date; // from timestamps
-  status: "active" | "inactive" | "pending"; // contact status
+  fullName: string;
+  group?: ObjectId | IGroup | null; // 👈 allow populated object
+  email?: string;
+  phoneNumber: string;
+  createdAt: Date;
+  updatedAt: Date;
+  status: "active" | "inactive" | "pending";
 }
-
-// export interface AuthenticatedUser {
-//   userId: ObjectId;
-//   roles: UserRolesEnum;
-//   email?: string;
-// }

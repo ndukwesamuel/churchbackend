@@ -1,31 +1,52 @@
 import type { ObjectId } from "mongoose";
 import { ApiError, ApiSuccess } from "../../utils/responseHandler";
-import { hashPassword } from "../../utils/validationUtils";
-import type { RegisterDTO } from "../auth/auth.interface";
 import type { IUserProfile } from "./churchprofile.interface";
 import churchModel from "../church/church.model";
 import churchprofileModel from "./churchprofile.model";
-import userModel from "../user/user.model";
-// import type { IUser } from "./churchprofile.interface";
-// import User from "./user.model";
-
+import ContactsModel from "../contacts/contacts.model";
 class ChurchProfileService {
   static async getChurchProfile(userId: ObjectId) {
-    const user = await ChurchProfileService.findChurchById(userId);
-    return ApiSuccess.ok("User Retrieved Successfully", {
+    const user = await this.findChurchById(userId);
+    return ApiSuccess.ok("Church Profile Retrieved Successfully", {
       user,
     });
   }
 
-  static async createChurchGroup(userId: ObjectId, groupData: any) {
-    const churchProfile = await ChurchProfileService.findChurchById(userId);
+  static async getChurchGroupsWithCounts(userId: ObjectId) {
+    // Step 1: find the church profile (with groups defined)
+    const churchProfile = await churchprofileModel.findOne({ user: userId });
+    if (!churchProfile) {
+      throw ApiError.notFound("Church profile not found");
+    }
 
-    if (
-      ChurchProfileService.isDuplicateGroupName(
-        churchProfile.groups,
-        groupData.name
-      )
-    ) {
+    // Step 2: aggregate contacts by group
+    const counts = await ContactsModel.aggregate([
+      { $match: { user: userId } },
+      { $group: { _id: "$group", count: { $sum: 1 } } },
+    ]);
+
+    // Step 3: map counts into groups array
+    const groupsWithCounts = churchProfile.groups.map((group) => {
+      const match = counts.find(
+        (c) => c._id?.toString() === group._id!.toString()
+      );
+      console.log(match);
+      return {
+        groupId: group._id,
+        name: group.name,
+        description: group.description,
+        memberCount: match ? match.count : 0,
+      };
+    });
+
+    return ApiSuccess.ok("Groups retrieved successfully", {
+      groups: groupsWithCounts,
+    });
+  }
+  static async createChurchGroup(userId: ObjectId, groupData: any) {
+    const churchProfile = await this.findChurchById(userId);
+
+    if (this.isDuplicateGroupName(churchProfile.groups, groupData.name)) {
       throw ApiError.badRequest("Group name already exists in this church");
     }
 
@@ -36,7 +57,7 @@ class ChurchProfileService {
     });
 
     await churchProfile.save();
-    return ApiSuccess.ok("User Retrieved Successfully", {
+    return ApiSuccess.ok("Group Created Successfully", {
       groups: churchProfile.groups,
     });
   }
@@ -72,40 +93,6 @@ class ChurchProfileService {
       userId,
     });
   }
-  // static async createUser(userData: RegisterDTO): Promise<IUser> {
-  //   const { password, email, phoneNumber, userName, lastName } = userData;
-  //   const hashedPassword = await hashPassword(password);
-  //   const user = new User({
-  //     userName,
-  //     lastName,
-  //     phoneNumber,
-  //     email,
-  //     password: hashedPassword,
-  //   });
-  //   await user.save();
-  //   return user;
-  // }
-  // static async findUserByEmail(email: string): Promise<IUser> {
-  //   const user = await User.findOne({ email });
-  //   if (!user) {
-  //     throw ApiError.notFound("No user with this email");
-  //   }
-  //   return user;
-  // }
-  // static async findUserById(userId: ObjectId): Promise<IUser> {
-  //   const user = await User.findById(userId);
-  //   if (!user) {
-  //     throw ApiError.notFound("User Not Found");
-  //   }
-  //   return user;
-  // }
-  // static async isDuplicateGroupName(email: string): Promise<void> {
-  //   const user = await User.findOne({ email });
-
-  //   if (user) {
-  //     throw ApiError.badRequest("User with this email exists");
-  //   }
-  // }
 
   static isDuplicateGroupName(
     groups: { name: string }[],
