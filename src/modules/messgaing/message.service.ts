@@ -26,7 +26,7 @@ class MessageService {
       const response = await axios.post(TERMII_BASE_URL, {
         api_key: TERMII_API_KEY,
         to: recipients.join(","), // join numbers with comma
-        from: senderId,
+        from:  "MyChurch", // senderId,
         sms: message,
         type: "plain",
         channel: "generic",
