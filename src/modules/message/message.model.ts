@@ -12,7 +12,7 @@ const MessageSchema = new Schema<IMessage>(
       enum: ["sms", "whatsapp", "email"],
       required: true,
     },
-    recipients: [{ type: Schema.Types.ObjectId, ref: "Groups" }],
+    recipients: [{ type: Schema.Types.ObjectId, ref: "Group" }],
     status: {
       type: String,
       enum: ["draft", "scheduled", "sent", "failed"],
