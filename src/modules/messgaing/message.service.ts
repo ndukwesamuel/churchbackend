@@ -1,38 +1,99 @@
-import { ApiError, ApiSuccess } from "../../utils/responseHandler";
-import axios from "axios";
+import https from "https";
+import { ApiError, ApiSuccess } from "../../utils/responseHandler"; // Assuming you have these utilities
+import { env } from "../../config/env.config";
 
-const TERMII_BASE_URL =
-  process.env.TERMII_BASE_URL || "https://api.ng.termii.com/api/sms/send";
-<<<<<<< HEAD
-const TERMII_API_KEY =
-  process.env.TERMII_API_KEY ||
-  "TLnMfjVvHrTdaihJYhexOquvDQMESDSbRbwvVaVbBgsKxfQTJTMNEVWzBabrsf";
-=======
-const TERMII_API_KEY = process.env.TERMII_API_KEY;
-// ||
-// "TLnMfjVvHrTdaihJYhexOquvDQMESDSbRbwvVaVbBgsKxfQTJTMNEVWzBabrsf";
->>>>>>> 5a9ddf9 (feat: dashboard)
+// --- Termii API Configuration ---
+const HOSTNAME = "api.ng.termii.com";
+const BULK_SMS_PATH = "/api/sms/send/bulk";
+
+// --- Termii Payload Interface (for better type safety) ---
+interface ITermiiBulkPayload {
+  api_key: string;
+  to: string[]; // Array of phone numbers
+  from: string; // Sender ID
+  sms: string; // The message content
+  type: "plain" | "unicode"; // Message type
+  channel: "dnd" | "generic" | "whatsapp"; // Message channel
+}
 
 class MessageService {
-  static async sendBulkSMS(
-    recipients: string[],
-    senderId: string,
-    message: string
-  ) {
-    try {
-      const response = await axios.post(TERMII_BASE_URL, {
-        api_key: TERMII_API_KEY,
-        to: recipients.join(","), // join numbers with comma
-        from: "MyChurch", // senderId,
-        sms: message,
-        type: "plain",
-        channel: "generic",
+  static async sendBulkSMSV2(payload: ITermiiBulkPayload) {
+    const maindata = {
+      api_key: env.TERMII_API_KEY,
+      to: payload.to,
+      from: "CHURCHSMS",
+      sms: payload.sms, //"Hi there, testing Termii bulk send with the new service structure.",
+      type: "plain",
+      channel: "generic",
+    };
+    const termiiPayload = JSON.stringify(maindata);
+
+    const options = {
+      hostname: HOSTNAME,
+      port: 443, // Default HTTPS port
+      path: BULK_SMS_PATH,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": termiiPayload.length,
+      },
+    };
+
+    return new Promise((resolve, reject) => {
+      const apiReq = https.request(options, (apiRes) => {
+        let data = "";
+
+        // Collect the response data from Termii
+        apiRes.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        // Termii response received
+        apiRes.on("end", () => {
+          try {
+            const termiiResponse = JSON.parse(data);
+
+            // Check if Termii returned a non-success status code (e.g., 400, 500)
+            if (apiRes.statusCode && apiRes.statusCode >= 400) {
+              // Reject with an ApiError if the Termii API indicates a failure
+              return reject(
+                ApiError.internal(
+                  `Termii API Error (${apiRes.statusCode}): ${
+                    termiiResponse.message || "Bulk SMS failed."
+                  }`,
+                  termiiResponse
+                )
+              );
+            }
+
+            // Resolve with a success response wrapper
+            return resolve(
+              ApiSuccess.ok("Bulk SMS sent successfully", termiiResponse)
+            );
+          } catch (e) {
+            // Handle JSON parsing error from Termii
+            return reject(
+              ApiError.internal("Failed to parse response from Termii API.")
+            );
+          }
+        });
       });
 
-      return ApiSuccess.ok("SMS sent successfully", response.data);
-    } catch (error: any) {
-      throw ApiError.badRequest(error.response?.data || error.message);
-    }
+      // Handle network errors (e.g., DNS failure, connection refused)
+      apiReq.on("error", (e) => {
+        console.error(`Problem with Termii request: ${e.message}`);
+        return reject(
+          ApiError.internal(
+            "Failed to connect to the external messaging API.",
+            { details: e.message }
+          )
+        );
+      });
+
+      // Write the payload to the request body and send the request
+      apiReq.write(termiiPayload);
+      apiReq.end();
+    });
   }
 }
 
