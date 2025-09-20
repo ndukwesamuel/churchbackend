@@ -10,13 +10,9 @@ const WHATSAPP_PATH = "/api/sms/send";
 
 // --- Termii Payload Interface (for better type safety) ---
 interface ITermiiBulkPayload {
-  api_key: string;
-  // to: string[]; // Array of phone numbers
   to: string | string[]; // Can be a single number or an array
-  from: string; // Sender ID
-  // api_key?: string;
-  // to: string[]; // Array of phone numbers
-  // from?: string; // Sender ID
+  api_key?: string;
+  from?: string; // Sender ID
   sms: string; // The message content
   type?: "plain" | "unicode"; // Message type
   channel?: "dnd" | "generic" | "whatsapp"; // Message channel
@@ -24,9 +20,6 @@ interface ITermiiBulkPayload {
 
 class MessageService {
   static async sendBulkSMSV2(payload: ITermiiBulkPayload) {
-    console.log(payload);
-    console.log(payload.to);
-
     const maindata = {
       api_key: env.TERMII_API_KEY,
       to: payload.to,
@@ -65,11 +58,10 @@ class MessageService {
             if (apiRes.statusCode && apiRes.statusCode >= 400) {
               // Reject with an ApiError if the Termii API indicates a failure
               return reject(
-                ApiError.internal(
+                ApiError.internalServerError(
                   `Termii API Error (${apiRes.statusCode}): ${
                     termiiResponse.message || "Bulk SMS failed."
-                  }`,
-                  termiiResponse
+                  }`
                 )
               );
             }
@@ -81,7 +73,9 @@ class MessageService {
           } catch (e) {
             // Handle JSON parsing error from Termii
             return reject(
-              ApiError.internal("Failed to parse response from Termii API.")
+              ApiError.internalServerError(
+                "Failed to parse response from Termii API."
+              )
             );
           }
         });
@@ -91,9 +85,8 @@ class MessageService {
       apiReq.on("error", (e) => {
         console.error(`Problem with Termii request: ${e.message}`);
         return reject(
-          ApiError.internal(
-            "Failed to connect to the external messaging API.",
-            { details: e.message }
+          ApiError.internalServerError(
+            "Failed to connect to the external messaging API."
           )
         );
       });
@@ -250,9 +243,7 @@ class MessageService {
   //   });
   // }
 
-  static async sendBulkWhatsApp(
-    payload: Omit<ITermiiBulkPayload, "channel"> & { channel: "whatsapp" }
-  ) {
+  static async sendBulkWhatsApp(payload: ITermiiBulkPayload) {
     const maindata = {
       api_key: env.TERMII_API_KEY,
       to: payload.to,

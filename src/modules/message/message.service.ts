@@ -93,10 +93,7 @@ export class MessageService {
 
         // return await MessageSender2.sendBulkEmail(emailData);
         case "whatsapp":
-        // return await MessageSender.sendBulkWhatsapp(
-        //   contacts.map((c) => c.phoneNumber),
-        //   data.message
-        // );
+          return await MessageSender.sendBulkWhatsApp(payload);
 
         default:
           throw ApiError.badRequest("Unsupported message type");
