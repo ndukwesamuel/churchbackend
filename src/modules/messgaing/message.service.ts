@@ -3,9 +3,9 @@ import axios from "axios";
 
 const TERMII_BASE_URL =
   process.env.TERMII_BASE_URL || "https://api.ng.termii.com/api/sms/send";
-const TERMII_API_KEY =
-  process.env.TERMII_API_KEY ||
-  "TLnMfjVvHrTdaihJYhexOquvDQMESDSbRbwvVaVbBgsKxfQTJTMNEVWzBabrsf";
+const TERMII_API_KEY = process.env.TERMII_API_KEY;
+// ||
+// "TLnMfjVvHrTdaihJYhexOquvDQMESDSbRbwvVaVbBgsKxfQTJTMNEVWzBabrsf";
 
 class MessageService {
   static async sendBulkSMS(
