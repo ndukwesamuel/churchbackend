@@ -1,18 +1,25 @@
 import type { ObjectId } from "mongoose";
 import ContactsModel from "../contacts/contacts.model";
 import MessageModel from "../message/message.model";
+import mongoose from "mongoose";
+
 export class DashboardService {
   static async getAllStats(userId: ObjectId) {
     try {
+      const userObjectId =
+        typeof userId === "string"
+          ? new mongoose.Types.ObjectId(userId)
+          : userId;
+
       // Count active contacts
       const activeUsers = await ContactsModel.countDocuments({
-        user: userId,
+        user: userObjectId,
         status: "active",
       });
 
       // Total messages sent
       const totalMessagesSent = await MessageModel.countDocuments({
-        createdBy: userId,
+        createdBy: userObjectId,
         status: "sent",
       });
 
@@ -20,7 +27,7 @@ export class DashboardService {
       const messageTypeCounts = await MessageModel.aggregate([
         {
           $match: {
-            createdBy: userId,
+            createdBy: userObjectId,
             status: "sent",
           },
         },
@@ -30,11 +37,18 @@ export class DashboardService {
             count: { $sum: 1 },
           },
         },
+        {
+          $project: {
+            _id: 0,
+            messageType: "$_id",
+            count: 1,
+          },
+        },
       ]);
 
       // Message details (sent only)
       const messageDetails = await MessageModel.find(
-        { createdBy: userId, status: "sent" },
+        { createdBy: userObjectId, status: "sent" },
         {
           message: 1,
           messageType: 1,
@@ -43,7 +57,7 @@ export class DashboardService {
           sentAt: 1,
         }
       )
-        .sort({ sentAt: -1 }) // newest first
+        .sort({ sentAt: -1 })
         .lean();
 
       return {
