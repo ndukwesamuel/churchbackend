@@ -1,6 +1,7 @@
 import https from "https";
 import { ApiError, ApiSuccess } from "../../utils/responseHandler"; // Assuming you have these utilities
 import { env } from "../../config/env.config";
+import { log } from "console";
 
 // --- Termii API Configuration ---
 const HOSTNAME = "api.ng.termii.com";
@@ -8,16 +9,19 @@ const BULK_SMS_PATH = "/api/sms/send/bulk";
 
 // --- Termii Payload Interface (for better type safety) ---
 interface ITermiiBulkPayload {
-  api_key: string;
+  api_key?: string;
   to: string[]; // Array of phone numbers
-  from: string; // Sender ID
+  from?: string; // Sender ID
   sms: string; // The message content
-  type: "plain" | "unicode"; // Message type
-  channel: "dnd" | "generic" | "whatsapp"; // Message channel
+  type?: "plain" | "unicode"; // Message type
+  channel?: "dnd" | "generic" | "whatsapp"; // Message channel
 }
 
 class MessageService {
   static async sendBulkSMSV2(payload: ITermiiBulkPayload) {
+    console.log(payload);
+    console.log(payload.to);
+
     const maindata = {
       api_key: env.TERMII_API_KEY,
       to: payload.to,
@@ -27,7 +31,6 @@ class MessageService {
       channel: "generic",
     };
     const termiiPayload = JSON.stringify(maindata);
-
     const options = {
       hostname: HOSTNAME,
       port: 443, // Default HTTPS port

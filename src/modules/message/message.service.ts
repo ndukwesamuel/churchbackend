@@ -6,9 +6,7 @@ import { AgendaScheduler } from "../scheduler/agenda.scheduler";
 import { MessageProvider } from "./message.provider";
 import type { IMessage } from "./message.interface";
 import MessageSender from "../messgaing/message.service";
-import MessageSender2, {
-  type BulkEmailData,
-} from "../messgaing2/message.service";
+
 const COST_PER_TYPE: Record<string, number> = {
   sms: 3,
   whatsapp: 3,
@@ -68,32 +66,32 @@ export class MessageService {
         status: "sent",
         sentAt: new Date(),
       });
-
+      const payload = {
+        to: contacts.map((c) => c.phoneNumber),
+        sms: data.message,
+      };
+      console.log(payload);
       // Directly delegate to the right provider
       switch (data.messageType) {
         case "sms":
-          return await MessageSender.sendBulkSMS(
-            contacts.map((c) => c.phoneNumber),
-            data.senderId,
-            data.message
-          );
+          return await MessageSender.sendBulkSMSV2(payload);
 
         case "email":
-          const emailData: BulkEmailData = {
-            subject: data.subject,
-            htmlContent: data.message, // assuming message is HTML body
-            textContent: data.textContent || data.message, // fallback
-            senderName: data.senderName || "Elpis",
-            senderEmail: data.senderEmail || "75e89f001@smtp-brevo.com",
-            recipients: contacts.map((c) => ({
-              name: c.fullName,
-              email: c.email,
-            })),
-            replyTo: data.replyTo,
-            userId,
-          };
+        // const emailData: BulkEmailData = {
+        //   subject: data.subject,
+        //   htmlContent: data.message, // assuming message is HTML body
+        //   textContent: data.textContent || data.message, // fallback
+        //   senderName: data.senderName || "Elpis",
+        //   senderEmail: data.senderEmail || "75e89f001@smtp-brevo.com",
+        //   recipients: contacts.map((c) => ({
+        //     name: c.fullName,
+        //     email: c.email,
+        //   })),
+        //   replyTo: data.replyTo,
+        //   userId,
+        // };
 
-          return await MessageSender2.sendBulkEmail(emailData);
+        // return await MessageSender2.sendBulkEmail(emailData);
         case "whatsapp":
         // return await MessageSender.sendBulkWhatsapp(
         //   contacts.map((c) => c.phoneNumber),
