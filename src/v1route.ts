@@ -10,6 +10,7 @@ import TemplateRoutes from "./modules/template/template.route";
 import { isAuth } from "./middleware/auth";
 import CategoryRoutes from "./modules/category/category.route";
 import MessageRoutes from "./modules/message/message.route";
+import mainMessageRoutes from "./modules/messgaing/message.routes";
 const router = express.Router();
 
 router
@@ -31,5 +32,6 @@ router.use("/collection", isAuth, FilesRoutes);
 router.use("/templates", isAuth, TemplateRoutes);
 router.use("/categories", isAuth, CategoryRoutes);
 router.use("/messages", isAuth, MessageRoutes);
+router.use("/main", mainMessageRoutes);
 
 export default router;
