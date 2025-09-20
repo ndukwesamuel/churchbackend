@@ -19,8 +19,6 @@ router
   })
   .all(methodNotAllowed);
 
-// router.route("/").get(isAuth, AuthController.getUser).all(methodNotAllowed);
-
 router
   .route("/signup")
   .post(validateBody(churchSchema), AuthController.churchregister)

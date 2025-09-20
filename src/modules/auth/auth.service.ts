@@ -24,11 +24,7 @@ export class AuthService {
 
     await UserService.checkIfChurchExists(email);
 
-    // console.log({ userData });
-
     const hashedPassword = await hashPassword(password);
-
-    // console.log({ hashedPassword });
 
     const user = new churchModel({
       password: hashedPassword,
@@ -55,14 +51,14 @@ export class AuthService {
     const { email, password } = userData;
 
     const user = await churchModel.findOne({ email }).select("+password");
-    await comparePassword(password, user.password as string);
+    await comparePassword(password, user?.password as string);
 
     // const user = await UserService.findChurchByEmail(email);
 
-    if (!user.isVerified) {
+    if (!user?.isVerified) {
       throw ApiError.forbidden("Email Not Verified");
     }
-    const token = generateToken({ userId: user._id });
+    const token = generateToken({ userId: user?._id });
 
     return ApiSuccess.ok("Login Successful", {
       user: { email: user.email, id: user._id },
@@ -101,7 +97,7 @@ export class AuthService {
     const { email, password } = userData;
     // const user = await userModel.findOne({ email }).select("+password");
     const user = await UserService.findUserByEmail(email);
-
+    console.log("hello");
     await comparePassword(password, user.password as string);
 
     if (!user.isVerified) {
