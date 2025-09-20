@@ -4,6 +4,10 @@ export const env = cleanEnv(Bun.env, {
   MONGODB_URI: str(),
   BREVO_EMAIL: str(),
   BREVO_PASSWORD: str(),
+  EMAIL_PORT: str(),
+  EMAIL_HOST: str(),
+  EMAIL_USER: str(),
+  EMAIL_PASS: str(),
   NODE_ENV: str({
     choices: ["development", "production", "test"],
   }),

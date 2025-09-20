@@ -6,11 +6,11 @@ import MessageService from "./message.service.js";
 
 const router = express.Router();
 
-router
-  .route("/")
-  .get(isAuth, MessegingController.sendSmS)
-  // .post(isAuth, ContactsController.createContacts)
-  .all(methodNotAllowed);
+router;
+// .route("/")
+// .get(isAuth, MessegingController.sendSmS)
+// // .post(isAuth, ContactsController.createContacts)
+// .all(methodNotAllowed);
 
 router.get("/send-bulk-sms", async (req, res) => {
   try {
