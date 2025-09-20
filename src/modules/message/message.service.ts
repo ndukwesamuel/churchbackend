@@ -6,6 +6,9 @@ import { AgendaScheduler } from "../scheduler/agenda.scheduler";
 import { MessageProvider } from "./message.provider";
 import type { IMessage } from "./message.interface";
 import MessageSender from "../messgaing/message.service";
+import MessageSender2, {
+  type BulkEmailData,
+} from "../messgaing2/message.service";
 const COST_PER_TYPE: Record<string, number> = {
   sms: 3,
   whatsapp: 3,
@@ -76,13 +79,21 @@ export class MessageService {
           );
 
         case "email":
-        // return await MessageSender.sendBulkEmail(
-        //   contacts.map((c) => c.email),
-        //   data.senderEmail,
-        //   data.subject,
-        //   data.message
-        // );
+          const emailData: BulkEmailData = {
+            subject: data.subject,
+            htmlContent: data.message, // assuming message is HTML body
+            textContent: data.textContent || data.message, // fallback
+            senderName: data.senderName || "Elpis",
+            senderEmail: data.senderEmail || "75e89f001@smtp-brevo.com",
+            recipients: contacts.map((c) => ({
+              name: c.fullName,
+              email: c.email,
+            })),
+            replyTo: data.replyTo,
+            userId,
+          };
 
+          return await MessageSender2.sendBulkEmail(emailData);
         case "whatsapp":
         // return await MessageSender.sendBulkWhatsapp(
         //   contacts.map((c) => c.phoneNumber),

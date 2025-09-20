@@ -1,11 +1,8 @@
 import type { Request, Response } from "express";
-// import { AuthService } from "./auth.service.js";
 import type { AuthenticatedUser } from "../user/user.interface.js";
 import ContactsService from "./contacts.service.js";
-// import ChurchProfileService from "./churchprofile.service.js";
 
 export class ContactsController {
-  // Get user data
   static async getChurchContact(req: Request, res: Response) {
     const { userId } = req.user as AuthenticatedUser;
     const result = await ContactsService.getChurchContact(userId);
