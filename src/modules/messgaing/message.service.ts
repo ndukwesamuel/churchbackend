@@ -5,11 +5,14 @@ import { env } from "../../config/env.config";
 // --- Termii API Configuration ---
 const HOSTNAME = "api.ng.termii.com";
 const BULK_SMS_PATH = "/api/sms/send/bulk";
+const WHATSAPP_PATH = "/api/sms/send";
 
 // --- Termii Payload Interface (for better type safety) ---
 interface ITermiiBulkPayload {
   api_key: string;
-  to: string[]; // Array of phone numbers
+  // to: string[]; // Array of phone numbers
+  to: string | string[]; // Can be a single number or an array
+
   from: string; // Sender ID
   sms: string; // The message content
   type: "plain" | "unicode"; // Message type
@@ -91,6 +94,79 @@ class MessageService {
       });
 
       // Write the payload to the request body and send the request
+      apiReq.write(termiiPayload);
+      apiReq.end();
+    });
+  }
+
+  static async sendBulkWhatsApp(
+    payload: Omit<ITermiiBulkPayload, "channel"> & { channel: "whatsapp" }
+  ) {
+    const maindata = {
+      api_key: env.TERMII_API_KEY,
+      to: payload.to,
+      from: "CHURCHSMS", // The Sender ID for your WhatsApp account
+      sms: payload.sms,
+      type: "plain",
+      channel: "whatsapp",
+    };
+    const termiiPayload = JSON.stringify(maindata);
+
+    const options = {
+      hostname: HOSTNAME,
+      port: 443,
+      path: WHATSAPP_PATH,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": termiiPayload.length,
+      },
+    };
+
+    return new Promise((resolve, reject) => {
+      const apiReq = https.request(options, (apiRes) => {
+        let data = "";
+        apiRes.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        apiRes.on("end", () => {
+          try {
+            const termiiResponse = JSON.parse(data);
+            if (apiRes.statusCode && apiRes.statusCode >= 400) {
+              return reject(
+                ApiError.internal(
+                  `Termii API Error (${apiRes.statusCode}): ${
+                    termiiResponse.message || "Bulk WhatsApp message failed."
+                  }`,
+                  termiiResponse
+                )
+              );
+            }
+            return resolve(
+              ApiSuccess.ok(
+                "Bulk WhatsApp messages sent successfully",
+                termiiResponse
+              )
+            );
+          } catch (e) {
+            return reject(
+              ApiError.internal("Failed to parse response from Termii API.")
+            );
+          }
+        });
+      });
+
+      apiReq.on("error", (e) => {
+        console.error(`Problem with Termii request: ${e.message}`);
+        return reject(
+          ApiError.internal(
+            "Failed to connect to the external messaging API.",
+            { details: e.message }
+          )
+        );
+      });
+
       apiReq.write(termiiPayload);
       apiReq.end();
     });

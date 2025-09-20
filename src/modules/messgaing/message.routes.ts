@@ -31,6 +31,25 @@ router.get("/send-bulk-sms", async (req, res) => {
   }
 });
 
+router.get("/send-bulk-whatapp", async (req, res) => {
+  try {
+    let payload = {
+      to: ["2349167703400", "2348065108162"],
+      sms: "Hi there, testing Termii bulk send with hardcoded data.",
+    };
+
+    const result = await MessageService.sendBulkWhatsApp(payload);
+
+    // The result is an ApiSuccess object, which you can send back to the client
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: "An unexpected error occurred.",
+      message: error.message,
+    });
+  }
+});
+
 export default router;
 
 // the session was wonderful  keep up the good work .
