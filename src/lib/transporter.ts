@@ -13,7 +13,6 @@ import { env } from "../config/env.config";
 //     rejectUnauthorized: false,
 //   },
 // });
-console.log(env.EMAIL_USER, env.EMAIL_PASS);
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
   port: 465,
