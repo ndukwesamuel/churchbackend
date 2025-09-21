@@ -21,4 +21,5 @@ export const env = cleanEnv(Bun.env, {
   CLOUNINARY_API_KEY: str(),
   CLOUNINARY_API_SECRET: str(),
   TERMII_API_KEY: str(),
+  RESEND_API_KEY: str(),
 });
