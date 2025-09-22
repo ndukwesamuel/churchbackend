@@ -11,7 +11,6 @@ const WHATSAPP_PATH = "/api/sms/send";
 const RESEND_HOSTNAME = "api.resend.com";
 const RESEND_PATH = "/emails";
 
-// --- Termii Payload Interface (for better type safety) ---
 interface ITermiiBulkPayload {
   to: string | string[]; // Can be a single number or an array
   api_key?: string;
