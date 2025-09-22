@@ -88,6 +88,114 @@ class ContactsService {
       .populate("user", "churchName pastorName email ")
       .populate("group");
   }
+
+  // ContactsService.ts (New method)
+
+  static async bulkCreateContacts(userId: ObjectId, contactDataArray: any[]) {
+    // 1. Prepare the final list of documents to insert
+    const contactsToInsert: any[] = [];
+    const failedContacts: any[] = [];
+
+    // 2. Iterate and validate/prepare each contact
+    for (const contactData of contactDataArray) {
+      try {
+        // Apply server-side standardization if not already done by front-end
+        const standardizedPhoneNumber = ContactsService.standardizePhoneNumber(
+          contactData.phoneNumber
+        );
+
+        // Basic validation check for required fields (can be expanded)
+        if (!contactData.fullName || !standardizedPhoneNumber) {
+          failedContacts.push({
+            data: contactData,
+            reason: "Missing full name or phone number",
+          });
+          continue; // Skip to the next contact
+        }
+
+        const contactPayload: any = {
+          user: userId,
+          fullName: contactData.fullName,
+          email: contactData.email || undefined, // Allow optional email
+          phoneNumber: standardizedPhoneNumber,
+          status: contactData.status?.toLowerCase() || "active", // Default status
+          role: contactData.role || "Member", // Default role
+        };
+
+        // Only include group if a groupId is provided
+        if (contactData.groupId) {
+          contactPayload.group = contactData.groupId;
+        }
+
+        contactsToInsert.push(contactPayload);
+      } catch (error) {
+        // Catch errors during phone number standardization or other preparation
+        failedContacts.push({
+          data: contactData,
+          reason: "Data processing error: " + (error as Error).message,
+        });
+      }
+    }
+
+    // 3. Perform the bulk insert if there are contacts to add
+    let insertedContacts = [];
+    let bulkInsertError: any = null;
+
+    if (contactsToInsert.length > 0) {
+      try {
+        // Mongoose's insertMany is highly efficient for bulk operations
+        insertedContacts = await contactsModel.insertMany(contactsToInsert, {
+          ordered: false,
+        });
+      } catch (error: any) {
+        // This catches validation errors that occur during the DB insert
+        if (error.writeErrors) {
+          // MongoDB errors contain detailed info about failed documents
+          error.writeErrors.forEach((err: any) => {
+            const failedDoc = contactsToInsert[err.index];
+            failedContacts.push({
+              data: failedDoc,
+              reason: err.errmsg || "MongoDB validation failed",
+            });
+          });
+          // Keep the successfully inserted documents (those not in writeErrors)
+          insertedContacts = error.insertedDocs || [];
+        } else {
+          bulkInsertError = error;
+        }
+      }
+    }
+
+    // 4. Return a summary result
+    const totalProcessed = contactDataArray.length;
+    const totalInserted = insertedContacts.length;
+    const totalFailed = failedContacts.length;
+
+    return ApiSuccess.ok("Bulk contact upload processed", {
+      totalProcessed,
+      totalInserted,
+      totalFailed,
+      failedContacts, // List any documents that failed to insert
+      bulkInsertError: bulkInsertError
+        ? "An unrecoverable error occurred during bulk insert."
+        : undefined,
+    });
+  }
+
+  // You must also add the standardization function to your Service class
+  static standardizePhoneNumber(inputNumber: any): string {
+    if (!inputNumber) return "";
+    // Ensure the input is treated as a string for replacement
+    const digitsOnly = String(inputNumber).replace(/\D/g, "");
+
+    // Check if it starts with '0' (Nigerian local format)
+    if (digitsOnly.length > 0 && digitsOnly.startsWith("0")) {
+      // Remove '0' and prepend '234'
+      return "234" + digitsOnly.substring(1);
+    }
+    // Return as is (could be '234...' or another international format)
+    return digitsOnly;
+  }
 }
 
 export default ContactsService;
