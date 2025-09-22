@@ -70,13 +70,21 @@ export class MessageService {
         to: contacts.map((c) => c.phoneNumber),
         sms: data.message,
       };
-      console.log(payload);
+      const emailPayload = {
+        from: "",
+        to: contacts.map((c) => c.email),
+        subject: "Email subject",
+        html: data.message,
+      };
+      // console.log(emailPayload);
       // Directly delegate to the right provider
       switch (data.messageType) {
         case "sms":
           return await MessageSender.sendBulkSMSV2(payload);
 
         case "email":
+          return await MessageSender.sendBulkEmail(emailPayload);
+
         // const emailData: BulkEmailData = {
         //   subject: data.subject,
         //   htmlContent: data.message, // assuming message is HTML body
