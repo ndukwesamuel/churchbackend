@@ -15,6 +15,41 @@ export class ContactsController {
     res.status(200).json(result);
   }
 
+  static async createBulkContacts(req: Request, res: Response) {
+    const { userId } = req.user as AuthenticatedUser;
+    const contactData = req.body;
+    const result = await ContactsService.bulkCreateContacts(
+      userId,
+      contactData
+    );
+    res.status(200).json(contactData);
+  }
+  // ContactsController.ts
+
+  // ... (existing methods like createContacts)
+
+  static async bulkCreateContacts(req: Request, res: Response) {
+    const { userId } = req.user as AuthenticatedUser;
+
+    // 1. Destructure and provide a default empty array if 'contacts' is missing
+    const { contacts = [] } = req.body;
+
+    // 2. Explicitly check if it's an array and not empty
+    if (!Array.isArray(contacts) || contacts.length === 0) {
+      return res.status(400).json({
+        success: false,
+        status: "Error",
+        message:
+          "No contact data found in the request body, or data is not a valid array.",
+      });
+    }
+
+    // Call the service layer with the guaranteed array
+    const result = await ContactsService.bulkCreateContacts(userId, contacts);
+
+    res.status(200).json(result);
+  }
+
   static async updateContacts(req: Request, res: Response) {
     const { userId } = req.user as AuthenticatedUser;
     const contactData = req.body;
