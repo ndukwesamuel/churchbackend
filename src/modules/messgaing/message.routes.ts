@@ -122,11 +122,7 @@ router.get("/send-resend-bulk-email", async (req, res) => {
   try {
     const payload = {
       from: "Kitovu Support <onboarding@resend.dev>",
-      to: [
-        // "adewobiadetayo1@gmail.com",
-        "ndukwesamuel23@gmail.com",
-        // "ndukwesamuel23@yahoo.com",
-      ],
+      to: ["ndukwesamuel23@gmail.com"],
       subject: "Important Announcement - Bulk Test",
       html: `
         <h1>Community Update</h1>
@@ -148,5 +144,3 @@ router.get("/send-resend-bulk-email", async (req, res) => {
 });
 
 export default router;
-
-// the session was wonderful  keep up the good work .
