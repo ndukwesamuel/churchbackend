@@ -12,12 +12,10 @@ import { ApiError, ApiSuccess } from "../../utils/responseHandler.js";
 import { generateToken } from "../../config/token.js";
 import logger from "../../utils/logger.js";
 import { mailService } from "../../services/mail.service.js";
-import type { ObjectId } from "mongoose";
 import userprofileModel from "../churchprofile/churchprofile.model.js";
-import userModel from "../user/user.model.js";
 import churchModel from "../church/church.model.js";
 import churchprofileModel from "../churchprofile/churchprofile.model.js";
-
+import { Types } from "mongoose";
 export class AuthService {
   static async churchRegister(userData: RegisterDTO) {
     const { password, email, churchName, pastorName } = userData;
@@ -111,7 +109,7 @@ export class AuthService {
     });
   }
 
-  static async getUser(userId: ObjectId) {
+  static async getUser(userId: Types.ObjectId) {
     const user = await UserService.findUserById(userId);
     user.password = undefined;
     return ApiSuccess.ok("User Retrieved Successfully", {

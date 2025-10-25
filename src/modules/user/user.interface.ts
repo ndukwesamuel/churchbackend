@@ -1,5 +1,5 @@
 import type { Document, ObjectId } from "mongoose";
-
+import { Types } from "mongoose";
 export type UserRolesEnum = ("user" | "admin")[];
 
 export interface IUser extends Document {
@@ -14,7 +14,7 @@ export interface IUser extends Document {
 }
 
 export interface AuthenticatedUser {
-  userId: ObjectId;
+  userId: Types.ObjectId;
   roles: UserRolesEnum;
   email?: string;
 }

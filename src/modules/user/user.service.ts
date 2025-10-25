@@ -1,4 +1,3 @@
-import type { ObjectId } from "mongoose";
 import { ApiError } from "../../utils/responseHandler";
 import { hashPassword } from "../../utils/validationUtils";
 import type { RegisterDTO } from "../auth/auth.interface";
@@ -6,7 +5,7 @@ import type { IUser } from "./user.interface";
 import User from "./user.model";
 import churchModel from "../church/church.model";
 import type { IChurch } from "../church/church.interface";
-
+import { Types } from "mongoose";
 class UserService {
   static async createUser(userData: RegisterDTO): Promise<IUser> {
     const { password, email, phoneNumber, userName, lastName } = userData;
@@ -32,7 +31,7 @@ class UserService {
     }
     return user;
   }
-  static async findUserById(userId: ObjectId): Promise<IUser> {
+  static async findUserById(userId: Types.ObjectId): Promise<IUser> {
     const user = await User.findById(userId);
 
     if (!user) {

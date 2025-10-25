@@ -1,7 +1,7 @@
 import MessageModel from "./message.model";
 import ContactModel from "../contacts/contacts.model";
 import { ApiSuccess, ApiError } from "../../utils/responseHandler";
-import type { ObjectId } from "mongoose";
+import { Types } from "mongoose";
 import { AgendaScheduler } from "../scheduler/agenda.scheduler";
 import { MessageProvider } from "./message.provider";
 import type { IMessage } from "./message.interface";
@@ -23,7 +23,7 @@ function dedupeContacts(contacts: any[]) {
 }
 
 export class MessageService {
-  static async createMessage(data: any, userId: ObjectId) {
+  static async createMessage(data: any, userId: Types.ObjectId) {
     const rawContacts = await this.resolveContacts(data.recipients);
     const contacts = dedupeContacts(rawContacts);
     const totalRecipients = contacts.length;

@@ -1,10 +1,10 @@
-import type { ObjectId } from "mongoose";
+import { Types } from "mongoose";
 import ContactsModel from "../contacts/contacts.model";
 import MessageModel from "../message/message.model";
 import mongoose from "mongoose";
 
 export class DashboardService {
-  static async getAllStats(userId: ObjectId) {
+  static async getAllStats(userId: Types.ObjectId) {
     try {
       const userObjectId =
         typeof userId === "string"

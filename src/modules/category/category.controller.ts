@@ -3,6 +3,7 @@ import { CategoryService } from "./category.service";
 import type { AuthenticatedUser } from "../user/user.interface";
 import { ApiError } from "../../utils/responseHandler";
 import { CategorySchemas } from "./category.schema";
+import { Types } from "mongoose";
 
 export class CategoryController {
   static async createCategory(req: Request, res: Response) {
@@ -53,7 +54,8 @@ export class CategoryController {
    * Returns all categories + how many templates fall under each
    */
   static async getCategoryStats(req: Request, res: Response) {
-    const result = await CategoryService.getCategoryStats();
+    const { userId } = req.user as AuthenticatedUser;
+    const result = await CategoryService.getCategoryStats(userId);
     res.status(result.status_code).json(result);
   }
 }

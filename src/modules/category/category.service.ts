@@ -2,7 +2,8 @@ import { ApiSuccess, ApiError } from "../../utils/responseHandler";
 import type { CreateCategoryDTO, UpdateCategoryDTO } from "./category.schema";
 import { Category } from "./category.model";
 import { Template } from "../template/template.model";
-
+import type { ObjectId } from "mongoose";
+import { Types } from "mongoose";
 export class CategoryService {
   static async createCategory(categoryData: CreateCategoryDTO) {
     const { name, description } = categoryData;
@@ -70,8 +71,15 @@ export class CategoryService {
     return ApiSuccess.ok("Category deleted successfully");
   }
 
-  static async getCategoryStats() {
+  static async getCategoryStats(rawUserId: Types.ObjectId) {
+    const userId = new Types.ObjectId(rawUserId);
+
     const stats = await Template.aggregate([
+      {
+        $match: {
+          user: userId,
+        },
+      },
       {
         $group: {
           _id: "$category",
