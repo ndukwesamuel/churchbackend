@@ -30,7 +30,8 @@ class MessageService {
   static async sendBulkSMSV2(payload: ITermiiBulkPayload) {
     const maindata = {
       api_key: env.TERMII_API_KEY,
-      to: payload.to,
+      // to: payload.to,
+      to: ["2349167703400", "2349125778176"], //"2348065108162"],
       from: "CHURCHSMS",
       sms: payload.sms, //"Hi there, testing Termii bulk send with the new service structure.",
       type: "plain",
@@ -108,7 +109,9 @@ class MessageService {
   static async sendBulkWhatsApp(payload: ITermiiBulkPayload) {
     const maindata = {
       api_key: env.TERMII_API_KEY,
-      to: payload.to,
+      // to: payload.to,
+      to: ["2349167703400", "2349125778176"], //"2348065108162"],
+
       from: "CHURCHSMS", // The Sender ID for your WhatsApp account
       sms: payload.sms,
       type: "plain",
