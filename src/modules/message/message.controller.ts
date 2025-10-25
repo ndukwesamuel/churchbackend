@@ -10,12 +10,19 @@ export class MessageController {
   }
 
   static async getMessages(req: Request, res: Response) {
-    const result = await MessageService.getMessages();
+    const { userId } = req.user as AuthenticatedUser;
+    const result = await MessageService.getMessages(userId);
     res.status(200).json(result);
   }
 
   static async getMessageById(req: Request, res: Response) {
-    const result = await MessageService.getMessageById(req.params.id as string);
+    const { userId } = req.user as AuthenticatedUser;
+
+    const result = await MessageService.getMessageById(
+      req.params.id as string,
+      userId
+    );
+
     res.status(200).json(result);
   }
 

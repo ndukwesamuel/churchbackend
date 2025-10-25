@@ -164,13 +164,18 @@ export class MessageService {
       status: "active",
     }).lean();
   }
-  static async getMessages() {
-    const messages = await MessageModel.find().populate("recipients");
+  static async getMessages(userId: Types.ObjectId) {
+    const messages = await MessageModel.find({ createdBy: userId }).populate(
+      "recipients"
+    );
     return ApiSuccess.ok("Messages fetched successfully", { messages });
   }
 
-  static async getMessageById(id: string) {
-    const message = await MessageModel.findById(id).populate("recipients");
+  static async getMessageById(id: string, userId: Types.ObjectId) {
+    const message = await MessageModel.findOne({
+      _id: id,
+      createdBy: userId,
+    }).populate("recipients");
     return ApiSuccess.ok("Message fetched successfully", { message });
   }
 

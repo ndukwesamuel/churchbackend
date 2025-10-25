@@ -1,4 +1,4 @@
-import type { ObjectId } from "mongoose";
+import type { Types } from "mongoose";
 import { ApiError, ApiSuccess } from "../../utils/responseHandler";
 import { hashPassword } from "../../utils/validationUtils";
 import type { RegisterDTO } from "../auth/auth.interface";
@@ -17,7 +17,7 @@ cloudinary.config({
 });
 
 class FileManagerService {
-  static async allCollection(userId: ObjectId) {
+  static async allCollection(userId: Types.ObjectId) {
     let existing = await FileManager.findOne({ user: userId });
 
     // if (!existing) {
@@ -29,7 +29,7 @@ class FileManagerService {
     });
   }
 
-  static async createCollection(userId: ObjectId) {
+  static async createCollection(userId: Types.ObjectId) {
     let existing = await FileManager.findOne({ user: userId });
 
     if (existing) {
@@ -46,7 +46,7 @@ class FileManagerService {
     });
   }
 
-  static async createFolder(userId: ObjectId, name: string) {
+  static async createFolder(userId: Types.ObjectId, name: string) {
     let collection = await FileManagerService.findUserFile(userId);
     if (!collection) {
       throw ApiError.notFound("User collection not found");
@@ -67,7 +67,7 @@ class FileManagerService {
   }
 
   static async AddFileTofolder(
-    userId: ObjectId,
+    userId: Types.ObjectId,
     folder_id: string,
     imageFiles: any[]
   ) {
@@ -200,7 +200,7 @@ class FileManagerService {
   }
 
   static async AddFileTofolderSingle(
-    userId: ObjectId,
+    userId: Types.ObjectId,
     folder_id: string,
     imageFile: any // only one file
   ) {
@@ -289,7 +289,7 @@ class FileManagerService {
     }
   }
 
-  static async findUserFile(userId: ObjectId): Promise<IFile | null> {
+  static async findUserFile(userId: Types.ObjectId): Promise<IFile | null> {
     const FileManagerData = await FileManager.findOne({
       user: userId,
     }).populate("user");
