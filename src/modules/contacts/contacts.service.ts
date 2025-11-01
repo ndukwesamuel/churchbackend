@@ -35,15 +35,60 @@ class ContactsService {
     });
   }
 
+  // static async createContact(userId: ObjectId, contactData: any) {
+  //   const contactPayload: any = {
+  //     user: userId,
+  //     fullName: contactData.fullName,
+  //     email: contactData.email,
+  //     phoneNumber: contactData.phoneNumber,
+  //   };
+  //   if (contactData.groupId) {
+  //     contactPayload.group = contactData.groupId; // ✅ only set if valid
+  //   }
+
+  //   const contact = await contactsModel.create(contactPayload);
+
+  //   return ApiSuccess.ok("Contact created successfully", { contact });
+  // }
+
+  // static async UpdateContact(userId: ObjectId, id: any, contactData: any) {
+  //   const updatedContact = await contactsModel.findByIdAndUpdate(
+  //     id,
+  //     contactData,
+  //     {
+  //       new: true, // return updated doc
+  //       runValidators: true, // apply schema validators
+  //     }
+  //   );
+  //   if (!updatedContact) {
+  //     throw ApiError.notFound("Contact not found");
+  //   }
+
+  //   return ApiSuccess.ok("Contact updated successfully", { updatedContact });
+  // }
+
   static async createContact(userId: ObjectId, contactData: any) {
     const contactPayload: any = {
       user: userId,
       fullName: contactData.fullName,
       email: contactData.email,
       phoneNumber: contactData.phoneNumber,
+      status: contactData.status || "active",
+      role: contactData.role || "Member",
     };
+
+    // Add group if provided
     if (contactData.groupId) {
-      contactPayload.group = contactData.groupId; // ✅ only set if valid
+      contactPayload.group = contactData.groupId;
+    }
+
+    // Add birthday fields if provided
+    if (contactData.birthDay) {
+      contactPayload.birthDay = contactData.birthDay;
+    }
+
+    if (contactData.birthMonth) {
+      contactPayload.birthMonth = contactData.birthMonth;
     }
 
     const contact = await contactsModel.create(contactPayload);
@@ -51,20 +96,45 @@ class ContactsService {
     return ApiSuccess.ok("Contact created successfully", { contact });
   }
 
-  static async UpdateContact(userId: ObjectId, id: any, contactData: any) {
-    const updatedContact = await contactsModel.findByIdAndUpdate(
-      id,
-      contactData,
-      {
-        new: true, // return updated doc
-        runValidators: true, // apply schema validators
-      }
+  // Update method should also handle birthday fields
+  static async updateContact(
+    contactId: ObjectId,
+    userId: ObjectId,
+    contactData: any
+  ) {
+    const updatePayload: any = {
+      fullName: contactData.fullName,
+      email: contactData.email,
+      phoneNumber: contactData.phoneNumber,
+      status: contactData.status,
+      role: contactData.role,
+    };
+
+    // Add group if provided
+    if (contactData.groupId) {
+      updatePayload.group = contactData.groupId;
+    }
+
+    // Add birthday fields if provided
+    if (contactData.birthDay !== undefined) {
+      updatePayload.birthDay = contactData.birthDay;
+    }
+
+    if (contactData.birthMonth !== undefined) {
+      updatePayload.birthMonth = contactData.birthMonth;
+    }
+
+    const contact = await contactsModel.findOneAndUpdate(
+      { _id: contactId, user: userId },
+      updatePayload,
+      { new: true, runValidators: true }
     );
-    if (!updatedContact) {
+
+    if (!contact) {
       throw ApiError.notFound("Contact not found");
     }
 
-    return ApiSuccess.ok("Contact updated successfully", { updatedContact });
+    return ApiSuccess.ok("Contact updated successfully", { contact });
   }
 
   static async deleteOneContact(userId: ObjectId, id: any) {

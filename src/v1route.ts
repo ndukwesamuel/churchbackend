@@ -12,6 +12,7 @@ import CategoryRoutes from "./modules/category/category.route";
 import MessageRoutes from "./modules/message/message.route";
 import mainMessageRoutes from "./modules/messgaing/message.routes";
 import DashboardRoutes from "./modules/dashboard/dashboard.route";
+import BirthdayRoutes from "./modules/birthday/birthday.routes";
 const router = express.Router();
 
 router
@@ -35,5 +36,6 @@ router.use("/categories", isAuth, CategoryRoutes);
 router.use("/messages", isAuth, MessageRoutes);
 router.use("/main", mainMessageRoutes);
 router.use("/dashboard", isAuth, DashboardRoutes);
+router.use("/birthday", isAuth, BirthdayRoutes);
 
 export default router;
