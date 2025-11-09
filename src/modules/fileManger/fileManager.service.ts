@@ -18,13 +18,14 @@ cloudinary.config({
 
 class FileManagerService {
   static async allCollection(userId: Types.ObjectId) {
-    let existing = await FileManager.findOne({ user: userId });
+    let existing = await FileManager.findOne({ user: userId }).sort({
+      createdAt: -1,
+    });
+    if (!existing) {
+      throw ApiError.notFound("No file collections");
+    }
 
-    // if (!existing) {
-    //   throw ApiError.notFound("User Dont has a file collection");
-    // }
-
-    return ApiSuccess.ok("User Retrieved Successfully", {
+    return ApiSuccess.ok("Folders Retrieved Successfully", {
       existing,
     });
   }

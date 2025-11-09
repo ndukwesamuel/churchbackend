@@ -18,6 +18,7 @@ import { errorMiddleware } from "./middleware/error";
 import fileUpload from "express-fileupload";
 import { seedCategories } from "./modules/category/seedcategory";
 import { agenda } from "./modules/scheduler/agenda.scheduler";
+import { seedGroups } from "./modules/group/seedGroups";
 const app = express();
 
 app.use(express.json());
@@ -98,6 +99,7 @@ const startServer = async () => {
     await connectDB();
     await agenda.start();
     // seedCategories();
+    // seedGroups();
     app.listen(env.PORT, () =>
       logger.info(`Server is listening on PORT:${env.PORT}`)
     );
