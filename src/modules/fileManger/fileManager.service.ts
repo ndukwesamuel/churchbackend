@@ -17,12 +17,32 @@ cloudinary.config({
 });
 
 class FileManagerService {
+  // static async allCollection(userId: Types.ObjectId) {
+  //   let existing = await FileManager.findOne({ user: userId }).sort({
+  //     createdAt: -1,
+  //   });
+  //   if (!existing) {
+  //     throw ApiError.notFound("No file collections");
+  //   }
+
+  //   return ApiSuccess.ok("Folders Retrieved Successfully", {
+  //     existing,
+  //   });
+  // }
+
   static async allCollection(userId: Types.ObjectId) {
-    let existing = await FileManager.findOne({ user: userId }).sort({
+    let existing = await FileManager.findOne({
+      user: userId, // Use the actual userId parameter
+    }).sort({
       createdAt: -1,
     });
+
+    // If no collection exists, create one immediately
     if (!existing) {
-      throw ApiError.notFound("No file collections");
+      existing = await FileManager.create({
+        user: userId,
+        photoFolders: [],
+      });
     }
 
     return ApiSuccess.ok("Folders Retrieved Successfully", {

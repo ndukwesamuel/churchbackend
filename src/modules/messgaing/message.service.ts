@@ -257,7 +257,6 @@ class MessageService {
 
     const postData = JSON.stringify({
       from: "Kitovu Support <onboarding@resend.dev>",
-
       // from:payload.from,
       to: ["ndukwesamuel23@gmail.com"], //payload.to,
       subject: payload.subject,
