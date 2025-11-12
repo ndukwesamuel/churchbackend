@@ -18,6 +18,7 @@ const MessageSchema = new Schema<IMessage>(
       enum: ["draft", "scheduled", "sent", "failed"],
       default: "draft",
     },
+
     scheduleAt: { type: Date },
     sentAt: { type: Date },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
