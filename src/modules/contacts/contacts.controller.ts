@@ -54,7 +54,8 @@ export class ContactsController {
     const { userId } = req.user as AuthenticatedUser;
     const contactData = req.body;
     const { id } = req.params;
-    const result = await ContactsService.UpdateContact(userId, id, contactData);
+    const result = await ContactsService.updateContact(userId, id, contactData);
+    // const result = await ContactsService.UpdateContact(userId, id, contactData);
     res.status(200).json(result);
   }
 

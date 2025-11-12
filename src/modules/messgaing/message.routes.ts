@@ -68,49 +68,6 @@ router.get("/send-bulk-whatsapp", async (req, res) => {
   }
 });
 
-// router.get("/send-bulk-email", async (req, res) => {
-//   try {
-//     let payload = {
-//       to: [
-//         "adewobiadetayo1@gmail.com",
-//         "ndukwesamuel23@gmail.com",
-//         "ndukwesamuel23@yahoo.com",
-//         // "another.user@example.com", // Replace with a real test email
-//         // "test.recipient@example.com", // Replace with another real test email
-//       ],
-//       sms: "Hi there, testing Termii bulk send with hardcoded data.",
-//     };
-
-//     const RECIPIENT_LIST = [
-//       "adewobiadetayo1@gmail.com",
-//       "ndukwesamuel23@gmail.com",
-//       "ndukwesamuel23@yahoo.com",
-//       // "another.user@example.com", // Replace with a real test email
-//       // "test.recipient@example.com", // Replace with another real test email
-//     ];
-
-//     const result = await MessageService.sendBulkEmail(payload);
-
-//     // The result is an ApiSuccess object, which you can send back to the client
-//     res.status(200).json(result);
-//   } catch (error) {
-//     // Check if the error is an instance of the custom ApiError class
-//     if (error instanceof ApiError) {
-//       // If it is, return the specific status code and data from the error object
-//       return res.status(error.statusCode).json({
-//         error: error.message,
-//         details: error.data,
-//       });
-//     }
-
-//     // For any other unexpected errors, return a generic 500 status
-//     res.status(500).json({
-//       error: "An unexpected error occurred.",
-//       message: error.message,
-//     });
-//   }
-// });
-
 router.get("/send-resend-bulk-email", async (req, res) => {
   try {
     const payload = {

@@ -3,6 +3,7 @@ import methodNotAllowed from "../../middleware/methodNotAllowed.js";
 // import { ContactsController } from "./contacts.controller.js";
 import { isAuth } from "../../middleware/auth.js";
 import { BirthDayController } from "./birthday.controller.js";
+import { TemplateController } from "../template/template.controller.js";
 const router = express.Router();
 
 router
@@ -12,10 +13,22 @@ router
   .all(methodNotAllowed);
 
 // router
-//   .route("/bulk")
-//   // .get(isAuth, ContactsController.getChurchContact)
-//   .post(isAuth, ContactsController.bulkCreateContacts)
-//   .all(methodNotAllowed);
+// .route("/")
+// .get(isAuth, BirthdayConfigController.getConfig)
+// .post(isAuth, BirthdayConfigController.createOrUpdateConfig)
+// .all(methodNotAllowed);
+router
+  .route("/template")
+  .get(isAuth, TemplateController.getAllTemplates)
+  .post(isAuth, BirthDayController.createOrUpdateConfig)
+
+  // .post(isAuth, BirthdayConfigController.createOrUpdateConfig)
+  .all(methodNotAllowed);
+
+router
+  .route("/templateConfig")
+  .get(isAuth, BirthDayController.getConfig)
+  .all(methodNotAllowed);
 
 // router
 //   .route("/:id")

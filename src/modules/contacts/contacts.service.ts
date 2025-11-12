@@ -3,6 +3,7 @@ import { ApiError, ApiSuccess } from "../../utils/responseHandler";
 import contactsModel from "./contacts.model";
 import type { IContacts } from "./contacts.interface";
 import type { IGroup } from "../group/group.interface";
+import mongoose from "mongoose";
 class ContactsService {
   static async getChurchContact(userId: ObjectId) {
     const members = await this.findALLChurchMembersContact(userId);
@@ -97,9 +98,49 @@ class ContactsService {
   }
 
   // Update method should also handle birthday fields
+  // static async updateContact(
+  //   userId: ObjectId,
+  //   contactId: ObjectId,
+  //   contactData: any
+  // ) {
+  //   const updatePayload: any = {
+  //     fullName: contactData.fullName,
+  //     email: contactData.email,
+  //     phoneNumber: contactData.phoneNumber,
+  //     status: contactData.status,
+  //     role: contactData.role,
+  //   };
+
+  //   // Add group if provided
+  //   if (contactData.groupId) {
+  //     updatePayload.group = contactData.groupId;
+  //   }
+
+  //   // Add birthday fields if provided
+  //   if (contactData.birthDay !== undefined) {
+  //     updatePayload.birthDay = contactData.birthDay;
+  //   }
+
+  //   if (contactData.birthMonth !== undefined) {
+  //     updatePayload.birthMonth = contactData.birthMonth;
+  //   }
+
+  //   const contact = await contactsModel.findOneAndUpdate(
+  //     { _id: contactId, user: userId },
+  //     updatePayload,
+  //     { new: true, runValidators: true }
+  //   );
+
+  //   if (!contact) {
+  //     throw ApiError.notFound("Contact not found");
+  //   }
+
+  //   return ApiSuccess.ok("Contact updated successfully", { contact });
+  // }
+
   static async updateContact(
-    contactId: ObjectId,
     userId: ObjectId,
+    contactId: string | ObjectId, // Accept string or ObjectId
     contactData: any
   ) {
     const updatePayload: any = {
@@ -112,7 +153,7 @@ class ContactsService {
 
     // Add group if provided
     if (contactData.groupId) {
-      updatePayload.group = contactData.groupId;
+      updatePayload.group = new mongoose.Types.ObjectId(contactData.groupId);
     }
 
     // Add birthday fields if provided
@@ -124,8 +165,14 @@ class ContactsService {
       updatePayload.birthMonth = contactData.birthMonth;
     }
 
+    // Convert contactId to ObjectId if it's a string
+    const contactObjectId =
+      typeof contactId === "string"
+        ? new mongoose.Types.ObjectId(contactId)
+        : contactId;
+
     const contact = await contactsModel.findOneAndUpdate(
-      { _id: contactId, user: userId },
+      { _id: contactObjectId, user: userId },
       updatePayload,
       { new: true, runValidators: true }
     );
