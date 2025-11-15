@@ -27,7 +27,20 @@ router
 
 router
   .route("/templateConfig")
-  .get(isAuth, BirthDayController.getConfig)
+  // .get(isAuth, BirthDayController.getAllConfigs)
+  .get(BirthDayController.getAllConfigs)
+  .all(methodNotAllowed);
+
+router
+  .route("/sendmessage")
+  // .get(isAuth, BirthDayController.getAllConfigs)
+  .post(BirthDayController.sendTestBirthdayMessage)
+  .all(methodNotAllowed);
+
+router
+  .route("/templateConfig/:configId")
+  // .get(isAuth, BirthDayController.getAllConfigs)
+  .delete(BirthDayController.deleteConfig)
   .all(methodNotAllowed);
 
 // router

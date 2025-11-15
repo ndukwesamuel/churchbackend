@@ -3,6 +3,8 @@ import type { AuthenticatedUser } from "../user/user.interface.js";
 // import ContactsService from "./contacts.service.js";
 import BirthdayService from "./birthday.service.js";
 import { BirthdayConfig } from "./birthday.model.js";
+import mongoose from "mongoose";
+import MessageService from "../messgaing/message.service.js";
 
 export class BirthDayController {
   // static async getAllBirthday(req: Request, res: Response) {
@@ -13,7 +15,7 @@ export class BirthDayController {
 
   static async getConfig(req: Request, res: Response) {
     try {
-      const { userId } = req.user as AuthenticatedUser;
+      const { userId } = req.user.userId as AuthenticatedUser;
 
       const config = await BirthdayConfig.findOne({ user: userId }).populate(
         "template"
@@ -40,6 +42,7 @@ export class BirthDayController {
   }
   static async getAllBirthday(req: Request, res: Response) {
     const { userId } = req.user as AuthenticatedUser;
+
     const { month } = req.query; // e.g. ?month=6
 
     const result = await BirthdayService.getBirthdaysByMonth(
@@ -51,29 +54,194 @@ export class BirthDayController {
   }
 
   static async createOrUpdateConfig(req: Request, res: Response) {
-    const { userId } = req.user as AuthenticatedUser;
-    const { enabled, templates, sendTime } = req.body;
+    try {
+      const { userId } = req.user as AuthenticatedUser;
 
-    const config = await BirthdayConfig.findOneAndUpdate(
-      { user: userId },
-      {
-        user: userId,
-        enabled,
-        templates,
-        sendTime,
-      },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true,
+      console.log({
+        tyu: userId,
+      });
+
+      const { enabled, template, selectedChannels, sendTime } = req.body;
+
+      // ✅ Validate that template exists
+      if (template) {
+        const Template = mongoose.model("Template");
+        const templateExists = await Template.findById(template);
+
+        if (!templateExists) {
+          return res.status(400).json({
+            success: false,
+            message: "Template not found. Please select a valid template.",
+          });
+        }
+
+        // ✅ Validate that selected channels are supported by the template
+        const invalidChannels = selectedChannels.filter(
+          (channel: string) => !templateExists.channels.includes(channel)
+        );
+
+        if (invalidChannels.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Template does not support channels: ${invalidChannels.join(
+              ", "
+            )}`,
+          });
+        }
       }
-    );
-    // .populate(["templates.email", "templates.whatsapp", "templates.sms"]);
 
-    res.status(200).json({
-      success: true,
-      data: config,
-      message: "Birthday configuration updated successfully",
-    });
+      // ✅ Find and update the ONE config for this user (regardless of template)
+      const config = await BirthdayConfig.findOneAndUpdate(
+        { user: userId }, // Only match by user, not template
+        {
+          user: userId,
+          enabled,
+          template,
+          selectedChannels,
+          sendTime,
+        },
+        {
+          new: true,
+          upsert: true, // Create if doesn't exist
+          runValidators: true,
+        }
+      ).populate("template");
+
+      res.status(200).json({
+        success: true,
+        data: config,
+        message: "Birthday configuration saved successfully",
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+  static async getAllConfigs(req: Request, res: Response) {
+    try {
+      const { userId } = req.user as AuthenticatedUser;
+
+      const configs = await BirthdayConfig.find({ user: userId })
+        .populate("template")
+        .populate("user", "churchName pastorName email")
+        .sort({ createdAt: -1 });
+
+      res.status(200).json({
+        success: true,
+        data: configs,
+        count: configs.length,
+        message: "Birthday configurations retrieved successfully",
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  static async deleteConfig(req: Request, res: Response) {
+    try {
+      const { userId } = req.user as AuthenticatedUser;
+
+      const { configId } = req.params;
+
+      const config = await BirthdayConfig.findOneAndDelete({
+        _id: configId,
+        user: userId,
+      });
+
+      if (!config) {
+        return res.status(404).json({
+          success: false,
+          message: "Birthday configuration not found",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Birthday configuration deleted successfully",
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  static async sendTestBirthdayMessage(req: Request, res: Response) {
+    try {
+      const { userId } = req.user as AuthenticatedUser;
+      const { contactId, channel } = req.body;
+
+      // Get the configuration
+      const config = await BirthdayConfig.findOne({ user: userId })
+        .populate("user")
+        .populate("template");
+
+      if (!config || !config.template) {
+        return res.status(400).json({
+          success: false,
+          message: "Birthday configuration or template not found",
+        });
+      }
+
+      // Get the contact
+      const Contact = mongoose.model("Contact");
+      const contact = await Contact.findOne({ _id: contactId, user: userId });
+
+      if (!contact) {
+        return res.status(404).json({
+          success: false,
+          message: "Contact not found",
+        });
+      }
+
+      let results;
+      if (channel === "email") {
+        const payload = {
+          // from: "Kitovu Support <onboarding@resend.dev>",
+          to: [contact.email],
+          subject: config.template.name,
+          html: ` ${config.template.content}       `,
+        };
+
+        // Send test message
+        results = await MessageService.sendBulkEmail(payload);
+      }
+
+      if (channel === "sms") {
+        const payload = {
+          // from: "Kitovu Support <onboarding@resend.dev>",
+          to: [contact.email],
+          subject: config.template.name,
+          html: ` ${config.template.content}       `,
+        };
+
+        // Send test message
+        // results = await MessageService.sendBulkEmail(payload);
+      }
+
+      res.status(200).json({
+        success: true,
+        contactEmail: contact.email,
+        contactPhone: contact.phoneNumber,
+        templateChanel: config.template.channels,
+        templateSUbject: config.template.name,
+        templatecontent: config.template.content,
+        template: config.template,
+        config,
+        // data: results,
+        message: "Test birthday message sent successfully",
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
   }
 }
