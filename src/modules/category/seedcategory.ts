@@ -27,6 +27,12 @@ export const categoryConfig = [
     description: "Messages directed at member support and follow-up",
     icon: "users",
   },
+
+  {
+    name: "Birthday",
+    description: "Birthday wishes, celebrations, and special greetings",
+    icon: "gift",
+  },
 ];
 
 export async function seedCategories() {
