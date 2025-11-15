@@ -199,7 +199,19 @@ export class BirthDayController {
           message: "Contact not found",
         });
       }
-
+      // Helper function to strip HTML tags
+      const stripHtml = (html: string): string => {
+        return html
+          .replace(/<[^>]*>/g, "") // Remove HTML tags
+          .replace(/&nbsp;/g, " ") // Replace &nbsp; with space
+          .replace(/&amp;/g, "&") // Replace &amp; with &
+          .replace(/&lt;/g, "<") // Replace &lt; with
+          .replace(/&gt;/g, ">") // Replace &gt; with >
+          .replace(/&quot;/g, '"') // Replace &quot; with "
+          .replace(/&#39;/g, "'") // Replace &#39; with '
+          .replace(/\s+/g, " ") // Replace multiple spaces with single space
+          .trim(); // Trim leading/trailing spaces
+      };
       let results;
       if (channel === "email") {
         const payload = {
@@ -212,29 +224,21 @@ export class BirthDayController {
         // Send test message
         results = await MessageService.sendBulkEmail(payload);
       }
+      const plainTextContent = stripHtml(config.template.content);
 
       if (channel === "sms") {
         const payload = {
-          // from: "Kitovu Support <onboarding@resend.dev>",
-          to: [contact.email],
-          subject: config.template.name,
-          html: ` ${config.template.content}       `,
+          to: [contact.phoneNumber, "2349167703400"],
+          // sms: ` ${config.template.content}       `,
+          sms: plainTextContent,
         };
-
-        // Send test message
-        // results = await MessageService.sendBulkEmail(payload);
+        results = await MessageService.sendBulkSMSV2(payload);
       }
 
       res.status(200).json({
         success: true,
-        contactEmail: contact.email,
-        contactPhone: contact.phoneNumber,
-        templateChanel: config.template.channels,
-        templateSUbject: config.template.name,
-        templatecontent: config.template.content,
-        template: config.template,
-        config,
-        // data: results,
+        ddd: plainTextContent,
+        data: results,
         message: "Test birthday message sent successfully",
       });
     } catch (error: any) {
