@@ -86,12 +86,9 @@ app.post("/api/send-whatsapp", async (req: Request, res: Response) => {
 //   await triggerBirthdayMessagesNow();
 //   res.json({ message: "Birthday job triggered" });
 // });
-// app.use("/api/v1", v1rootRouter);
+app.use("/api/v1", v1rootRouter);
 
-// app.use("/api/v1/auth", authRoutes);
-
-// app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
-// app.use(cors());
+app.use("/api/v1/auth", authRoutes);
 
 app.use(notFound);
 app.use(errorMiddleware);
