@@ -5,6 +5,7 @@ import BirthdayService from "./birthday.service.js";
 import { BirthdayConfig } from "./birthday.model.js";
 import mongoose from "mongoose";
 import MessageService from "../messgaing/message.service.js";
+import contactsModel from "../contacts/contacts.model.js";
 
 export class BirthDayController {
   // static async getAllBirthday(req: Request, res: Response) {
@@ -241,6 +242,63 @@ export class BirthDayController {
         data: results,
         message: "Test birthday message sent successfully",
       });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  static async sendTestBirthdayMessageJob(req: Request, res: Response) {
+    try {
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, "0");
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+
+      // 1. Get contacts celebrating birthday today
+      const contacts = await contactsModel.find({
+        birthDay: day,
+        birthMonth: month,
+      });
+
+      if (contacts.length === 0) {
+        console.log("No birthday");
+
+        // return res.status(200).json({
+        //   success: true,
+        //   contacts: [],
+        //   message: "No birthdays today",
+        // });
+      }
+
+      // 2. For each contact, get its BirthdayConfig
+      const results = [];
+
+      for (const contact of contacts) {
+        const config = await BirthdayConfig.findOne({ user: contact.user })
+          .populate("user")
+          .populate("template");
+
+        results.push({
+          contact,
+          config,
+        });
+      }
+
+      // console.log full result
+      console.log({
+        rrtt: contacts,
+        birthdayResults: results,
+      });
+
+      return;
+
+      // return res.status(200).json({
+      //   success: true,
+      //   data: results,
+      //   message: "Birthday configs fetched successfully",
+      // });
     } catch (error: any) {
       res.status(500).json({
         success: false,
