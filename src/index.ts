@@ -19,6 +19,10 @@ import fileUpload from "express-fileupload";
 import { seedCategories } from "./modules/category/seedcategory";
 import { agenda } from "./modules/scheduler/agenda.scheduler";
 import { seedGroups } from "./modules/group/seedGroups";
+
+import cron from "node-cron";
+import { MessageScheduler } from "./modules/message/message.scheduler";
+
 const app = express();
 
 app.use(express.json());
@@ -67,13 +71,6 @@ app.post("/api/send-whatsapp", async (req: Request, res: Response) => {
       });
     }
 
-    // const result = await sendWhatsAppText({ to, message });
-
-    // if (result.success) {
-    //   return res.json(result);
-    // } else {
-    //   return res.status(400).json(result);
-    // }
     return res.json({
       data: "this is me",
     });
@@ -84,7 +81,12 @@ app.post("/api/send-whatsapp", async (req: Request, res: Response) => {
     });
   }
 });
-app.use("/api/v1", v1rootRouter);
+
+// app.post("/api/v1/birthday/trigger-now", async (req, res) => {
+//   await triggerBirthdayMessagesNow();
+//   res.json({ message: "Birthday job triggered" });
+// });
+// app.use("/api/v1", v1rootRouter);
 
 // app.use("/api/v1/auth", authRoutes);
 
@@ -94,12 +96,25 @@ app.use("/api/v1", v1rootRouter);
 app.use(notFound);
 app.use(errorMiddleware);
 
+// cron.schedule("*/30 * * * * *", () => {
+//   console.log("Runs every 30 seconds");
+// });
+
+cron.schedule("*/10 * * * * *", async (ctx) => {
+  console.log(`Triggered At: ${ctx.triggeredAt.toISOString()}`);
+  console.log(`Scheduled For: ${ctx.dateLocalIso}`);
+  console.log(`Task Status: ${ctx.task.getStatus()}`);
+
+  await MessageScheduler.birthdayjob();
+});
 const startServer = async () => {
   try {
     await connectDB();
-    await agenda.start();
+    // await agenda.start();
+    // await scheduleBirthdayMessages();
     // seedCategories();
     // seedGroups();
+
     app.listen(env.PORT, () =>
       logger.info(`Server is listening on PORT:${env.PORT}`)
     );
