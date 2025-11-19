@@ -11,6 +11,11 @@ router
   .all(methodNotAllowed);
 
 router
+  .route("/adminAll")
+  .delete(ContactsController.deleteAllContacts)
+  .all(methodNotAllowed);
+
+router
   .route("/bulk")
   // .get(isAuth, ContactsController.getChurchContact)
   .post(isAuth, ContactsController.bulkCreateContacts)

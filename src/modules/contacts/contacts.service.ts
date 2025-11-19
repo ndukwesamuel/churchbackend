@@ -206,6 +206,13 @@ class ContactsService {
       .populate("group");
   }
 
+  static async Adminfindallcontact(userId: ObjectId): Promise<IContacts[]> {
+    return await contactsModel
+      .find()
+      .populate("user", "churchName pastorName email ")
+      .populate("group");
+  }
+
   // ContactsService.ts (New method)
 
   static async bulkCreateContacts(userId: ObjectId, contactDataArray: any[]) {

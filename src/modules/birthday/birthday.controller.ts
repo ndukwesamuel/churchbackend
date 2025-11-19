@@ -264,12 +264,6 @@ export class BirthDayController {
 
       if (contacts.length === 0) {
         console.log("No birthday");
-
-        // return res.status(200).json({
-        //   success: true,
-        //   contacts: [],
-        //   message: "No birthdays today",
-        // });
       }
 
       // 2. For each contact, get its BirthdayConfig
@@ -293,12 +287,6 @@ export class BirthDayController {
       });
 
       return;
-
-      // return res.status(200).json({
-      //   success: true,
-      //   data: results,
-      //   message: "Birthday configs fetched successfully",
-      // });
     } catch (error: any) {
       res.status(500).json({
         success: false,

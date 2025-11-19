@@ -11,4 +11,9 @@ router
   .post(AdminController.Adminregister)
   .all(methodNotAllowed);
 
+router
+  .route("/contact")
+  .get(AdminController.GetALLCOntact)
+  .all(methodNotAllowed);
+
 export default router;
