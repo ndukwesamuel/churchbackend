@@ -379,141 +379,18 @@ class BirthdayService {
     return contacts;
   }
 
-  // static async automaticBirthdayMessageJob(userId: ObjectId) {
-  //   const today = new Date();
-  //   const day = String(today.getDate()).padStart(2, "0");
-  //   const month = String(today.getMonth() + 1).padStart(2, "0");
-
-  //   const contacts = await contactsModel.find({
-  //     birthDay: day,
-  //     birthMonth: month,
-  //   });
-
-  //   if (contacts.length === 0) {
-  //     console.log("No birthday");
-  //   }
-
-  //   const results = [];
-
-  //   for (const contact of contacts) {
-  //     const config = await BirthdayConfig.findOne({ user: contact.user });
-
-  //     if (!config) continue;
-
-  //     // Get template ID
-  //     const templateId = config.template;
-
-  //     // Fetch full template data
-  //     const templateData = await Template.findById(templateId);
-
-  //     console.log({
-  //       contacts,
-  //       config_id: config._id,
-  //       configtemplate: config.template,
-  //       configselectedChannels: config.selectedChannels,
-  //       templateData,
-  //     });
-  //     results.push({
-  //       contact,
-  //       config,
-  //       template: templateData, // full template object
-  //     });
-  //   }
-
-  //   console.log({
-  //     rrtt: contacts,
-  //     birthdayResults: results,
-  //   });
-
-  //   return "contacts";
-  // }
-
-  // static async automaticBirthdayMessageJob(userId: ObjectId) {
-  //   try {
-  //     const today = new Date();
-  //     const day = String(today.getDate()).padStart(2, "0");
-  //     const month = String(today.getMonth() + 1).padStart(2, "0");
-
-  //     // 1. Get contacts whose birthday is today
-  //     const contacts = await contactsModel.find({
-  //       birthDay: day,
-  //       birthMonth: month,
-  //     });
-
-  //     if (contacts.length === 0) {
-  //       console.log("No birthday today");
-  //       return "no-contacts";
-  //     }
-
-  //     // This will store grouped results
-  //     const groups: Record<
-  //       string,
-  //       {
-  //         user: any;
-  //         template: any;
-  //         contacts: string[];
-  //         sms: string;
-  //       }
-  //     > = {};
-
-  //     // 2. Loop through contacts
-  //     for (const contact of contacts) {
-  //       const config = await BirthdayConfig.findOne({ user: contact.user });
-  //       if (!config) continue; // skip if no config
-
-  //       // Fetch full template data
-  //       const templateData = await Template.findById(config.template);
-  //       if (!templateData) continue;
-
-  //       // Convert HTML → plain text
-  //       const plainTextContent = templateData.content.replace(/<[^>]+>/g, "");
-
-  //       // unique group key = user + template
-  //       const groupKey = `${contact.user}_${config.template}`;
-
-  //       // Create group if not exists
-  //       if (!groups[groupKey]) {
-  //         groups[groupKey] = {
-  //           user: contact.user,
-  //           template: templateData,
-  //           contacts: [],
-  //           sms: plainTextContent,
-  //         };
-  //       }
-
-  //       // Add phone number
-  //       groups[groupKey].contacts.push(contact.phoneNumber);
-  //     }
-
-  //     // 3. Convert grouped results to payloads for sending
-  //     const groupedPayloads = Object.values(groups).map((group) => ({
-  //       to: group.contacts, // all phone numbers under this template
-  //       sms: group.sms, // plain-text message
-  //       user: group.user,
-  //       templateId: group.template._id,
-  //       template: group.template,
-  //     }));
-
-  //     console.log("==== GROUPED BIRTHDAY PAYLOADS ====");
-  //     console.log(groupedPayloads);
-
-  //     return groupedPayloads;
-  //   } catch (error: any) {
-  //     console.error("Birthday job error:", error.message);
-  //     return "error";
-  //   }
-  // }
-
   static async automaticBirthdayMessageJob(userId: ObjectId) {
     try {
       const today = new Date();
       const day = String(today.getDate()).padStart(2, "0");
       const month = String(today.getMonth() + 1).padStart(2, "0");
 
+      ("this is the real birhtday");
+
       // 1. Get contacts whose birthday is today
       const contacts = await contactsModel.find({
-        birthDay: "32", //day,
-        birthMonth: "12", //month,
+        birthDay: day,
+        birthMonth: month,
       });
 
       if (contacts.length === 0) {

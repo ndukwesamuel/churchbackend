@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { AuthService } from "../auth/auth.service.js";
 import type { AuthenticatedUser } from "../user/user.interface.js";
 import AdminserService from "./admin.service.js";
+import ContactsService from "../contacts/contacts.service.js";
 
 export class AdminController {
   static async Adminregister(req: Request, res: Response) {
@@ -10,17 +11,17 @@ export class AdminController {
     res.status(201).json(result);
   }
 
-  // static async login(req: Request, res: Response) {
-  //   const userData = req.body;
-  //   const result = await AuthService.churchlogin(userData);
-  //   res.status(200).json(result);
-  // }
-  // // Register user
-  // static async register(req: Request, res: Response) {
-  //   const userData = req.body;
-  //   const result = await AuthService.register(userData);
-  //   res.status(201).json(result);
-  // }
+  static async GetALLCOntact(req: Request, res: Response) {
+    // const userData = req.body;
+    const result = await ContactsService.Adminfindallcontact();
+    res.status(200).json(result);
+  }
+  // Register user
+  static async register(req: Request, res: Response) {
+    const userData = req.body;
+    const result = await AuthService.register(userData);
+    res.status(201).json(result);
+  }
 
   // // Login user
 

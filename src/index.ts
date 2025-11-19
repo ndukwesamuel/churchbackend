@@ -97,7 +97,8 @@ app.use(errorMiddleware);
 //   console.log("Runs every 30 seconds");
 // });
 
-cron.schedule("*/10 * * * * *", async (ctx) => {
+// cron.schedule("*/10 * * * * *", async (ctx) => {
+cron.schedule("0 8 * * *", async (ctx) => {
   console.log(`Triggered At: ${ctx.triggeredAt.toISOString()}`);
   console.log(`Scheduled For: ${ctx.dateLocalIso}`);
   console.log(`Task Status: ${ctx.task.getStatus()}`);
