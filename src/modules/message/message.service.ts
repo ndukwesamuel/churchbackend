@@ -6,6 +6,7 @@ import { AgendaScheduler } from "../scheduler/agenda.scheduler";
 import { MessageProvider } from "./message.provider";
 import type { IMessage } from "./message.interface";
 import MessageSender from "../messgaing/message.service";
+import { sendBulkEmail_Brevo } from "../../utils/email";
 
 const COST_PER_TYPE: Record<string, number> = {
   sms: 3,
@@ -83,7 +84,39 @@ export class MessageService {
           return await MessageSender.sendBulkSMSV2(payload);
 
         case "email":
-          return await MessageSender.sendBulkEmail(emailPayload);
+          console.log({
+            gyuuu: emailPayload,
+          });
+          const emailSubject = emailPayload.subject;
+          const emailHtml = emailPayload.html;
+          const emailText = emailPayload.html;
+          const recipients = emailPayload.to;
+
+          // const emailHtml =
+          //   "<h1>This is a bulk test email</h1><p>Bulk email is working!</p>";
+
+          // const recipients = [
+          //   "kenechukwuokoh30@gmail.com",
+          //   "ndukwesamuel23@gmail.com",
+          //   // Add more emails as needed
+          // ];
+
+          const result = await sendBulkEmail_Brevo({
+            to: recipients,
+            subject: emailSubject,
+            text: emailText,
+            html: emailHtml,
+          });
+
+          console.log({
+            gyy: result,
+            xxxx: result.results,
+          });
+
+          return result;
+
+        // return await MessageSender.sendBulkEmail(emailPayload);
+        // return await MessageSender.sendBulkEmail_Brevo(emailPayload);
 
         // const emailData: BulkEmailData = {
         //   subject: data.subject,

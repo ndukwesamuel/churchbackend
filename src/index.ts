@@ -98,7 +98,9 @@ app.use(errorMiddleware);
 // });
 
 // cron.schedule("*/10 * * * * *", async (ctx) => {
-cron.schedule("0 8 * * *", async (ctx) => {
+// cron.schedule("0 8 * * *", async (ctx) => {
+// cron.schedule("30 15 * * *", async (ctx) => {
+cron.schedule("10 8 * * *", async (ctx) => {
   console.log(`Triggered At: ${ctx.triggeredAt.toISOString()}`);
   console.log(`Scheduled For: ${ctx.dateLocalIso}`);
   console.log(`Task Status: ${ctx.task.getStatus()}`);
