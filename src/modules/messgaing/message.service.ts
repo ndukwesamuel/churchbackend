@@ -2,6 +2,7 @@ import https from "https";
 import { ApiError, ApiSuccess } from "../../utils/responseHandler"; // Assuming you have these utilities
 import { env } from "../../config/env.config";
 import { log } from "console";
+import { sendBulkEmail_Brevo } from "../../utils/email";
 
 // --- Termii API Configuration ---
 const HOSTNAME = "api.ng.termii.com";
@@ -250,81 +251,105 @@ class MessageService {
     });
   }
 
+  // static async sendBulkEmail(payload: IResendBulkPayload) {
+  //   // if (!env.RESEND_API_KEY) {
+  //   //   return ApiError.internalServerError("RESEND_API_KEY is not set.");
+  //   // }
+
+  //   const postData = JSON.stringify({
+  //     from: "Kitovu Support <onboarding@resend.dev>",
+  //     // from:payload.from,
+  //     to: ["ndukwesamuel23@gmail.com"], //payload.to,
+  //     subject: payload.subject,
+  //     html: payload.html,
+  //   });
+
+  //   const options = {
+  //     hostname: RESEND_HOSTNAME,
+  //     port: 443,
+  //     path: RESEND_PATH,
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${env.RESEND_API_KEY}`,
+  //       "Content-Length": Buffer.byteLength(postData),
+  //     },
+  //   };
+
+  //   return new Promise((resolve, reject) => {
+  //     const req = https.request(options, (res) => {
+  //       let data = "";
+
+  //       res.on("data", (chunk) => {
+  //         data += chunk;
+  //       });
+
+  //       res.on("end", () => {
+  //         try {
+  //           const resendResponse = JSON.parse(data);
+
+  //           if (res.statusCode && res.statusCode >= 400) {
+  //             return reject(
+  //               ApiError.internalServerError(
+  //                 `Resend API Error (${res.statusCode}): ${
+  //                   resendResponse.message || "Bulk email failed."
+  //                 }`
+  //               )
+  //             );
+  //           }
+
+  //           return resolve(
+  //             ApiSuccess.ok(
+  //               `Bulk email successfully queued for ${payload.to.length} recipients.`,
+  //               resendResponse
+  //             )
+  //           );
+  //         } catch (err) {
+  //           return reject(
+  //             ApiError.internalServerError(
+  //               "Failed to parse response from Resend API."
+  //             )
+  //           );
+  //         }
+  //       });
+  //     });
+
+  //     req.on("error", (e) => {
+  //       console.error(`Problem with Resend request: ${e.message}`);
+  //       return reject(
+  //         ApiError.internalServerError(
+  //           "Failed to connect to the Resend API service."
+  //         )
+  //       );
+  //     });
+
+  //     req.write(postData);
+  //     req.end();
+  //   });
+  // }
+
   static async sendBulkEmail(payload: IResendBulkPayload) {
-    if (!env.RESEND_API_KEY) {
-      return ApiError.internalServerError("RESEND_API_KEY is not set.");
-    }
-
-    const postData = JSON.stringify({
-      from: "Kitovu Support <onboarding@resend.dev>",
-      // from:payload.from,
-      to: ["ndukwesamuel23@gmail.com"], //payload.to,
-      subject: payload.subject,
-      html: payload.html,
+    console.log({
+      yuii: payload,
     });
 
-    const options = {
-      hostname: RESEND_HOSTNAME,
-      port: 443,
-      path: RESEND_PATH,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${env.RESEND_API_KEY}`,
-        "Content-Length": Buffer.byteLength(postData),
-      },
-    };
-
-    return new Promise((resolve, reject) => {
-      const req = https.request(options, (res) => {
-        let data = "";
-
-        res.on("data", (chunk) => {
-          data += chunk;
-        });
-
-        res.on("end", () => {
-          try {
-            const resendResponse = JSON.parse(data);
-
-            if (res.statusCode && res.statusCode >= 400) {
-              return reject(
-                ApiError.internalServerError(
-                  `Resend API Error (${res.statusCode}): ${
-                    resendResponse.message || "Bulk email failed."
-                  }`
-                )
-              );
-            }
-
-            return resolve(
-              ApiSuccess.ok(
-                `Bulk email successfully queued for ${payload.to.length} recipients.`,
-                resendResponse
-              )
-            );
-          } catch (err) {
-            return reject(
-              ApiError.internalServerError(
-                "Failed to parse response from Resend API."
-              )
-            );
-          }
-        });
-      });
-
-      req.on("error", (e) => {
-        console.error(`Problem with Resend request: ${e.message}`);
-        return reject(
-          ApiError.internalServerError(
-            "Failed to connect to the Resend API service."
-          )
-        );
-      });
-
-      req.write(postData);
-      req.end();
+    console.log({
+      xxx_emailTo: payload,
     });
+
+    const emailSubject = payload.subject; //"Bulk Test Email from Church";
+    const emailHtml = payload.html;
+    const recipients = payload.to;
+    const emailText = payload.subject;
+
+    const result = await sendBulkEmail_Brevo({
+      to: recipients,
+      subject: emailSubject,
+      text: emailText,
+      html: emailHtml,
+    });
+
+    return result;
   }
 }
 
