@@ -108,13 +108,13 @@ cron.schedule("10 8 * * *", async (ctx) => {
   console.log(`Task Status: ${ctx.task.getStatus()}`);
   await MessageScheduler.birthdayjob();
 });
-cron.schedule("*/10 * * * * *", async (ctx) => {
-  // cron.schedule("10 8 * * *", async (ctx) => {
-  console.log(`Triggered At: ${ctx.triggeredAt.toISOString()}`);
-  console.log(`Scheduled For: ${ctx.dateLocalIso}`);
-  console.log(`Task Status: ${ctx.task.getStatus()}`);
-  await MessageService.sendScheduledMessages();
-});
+// cron.schedule("*/10 * * * * *", async (ctx) => {
+//   // cron.schedule("10 8 * * *", async (ctx) => {
+//   console.log(`Triggered At: ${ctx.triggeredAt.toISOString()}`);
+//   console.log(`Scheduled For: ${ctx.dateLocalIso}`);
+//   console.log(`Task Status: ${ctx.task.getStatus()}`);
+//   await MessageService.sendScheduledMessages();
+// });
 const startServer = async () => {
   try {
     await connectDB();
