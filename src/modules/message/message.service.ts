@@ -71,6 +71,7 @@ export class MessageService {
         to: contacts.map((c) => c.phoneNumber),
         sms: data.message,
       };
+
       const emailPayload = {
         from: "",
         to: contacts.map((c) => c.email),
@@ -177,19 +178,19 @@ export class MessageService {
         }
       })
     );
+    console.log({ results });
+    // const successCount = results.filter(
+    //   (r) => r.status === "fulfilled" && r.value
+    // ).length;
+    // const failCount = results.length - successCount;
+    // const finalStatus = failCount > 0 ? "failed" : "sent";
 
-    const successCount = results.filter(
-      (r) => r.status === "fulfilled" && r.value
-    ).length;
-    const failCount = results.length - successCount;
-    const finalStatus = failCount > 0 ? "failed" : "sent";
-
-    // Update DB
-    message.status = finalStatus;
-    message.sentAt = new Date();
-    await message.save();
-
-    return { successCount, failCount, status: finalStatus };
+    // // Update DB
+    // message.status = finalStatus;
+    // message.sentAt = new Date();
+    // await message.save();
+    return { message: "message sent" };
+    // return { successCount, failCount, status: finalStatus };
   }
   static async resolveContacts(groupIds: string[]) {
     return ContactModel.find({

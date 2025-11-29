@@ -118,7 +118,7 @@ cron.schedule("10 8 * * *", async (ctx) => {
 const startServer = async () => {
   try {
     await connectDB();
-    // await agenda.start();
+    await agenda.start();
     // await scheduleBirthdayMessages();
     // seedCategories();
     // seedGroups();
