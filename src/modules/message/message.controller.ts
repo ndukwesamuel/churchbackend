@@ -38,4 +38,10 @@ export class MessageController {
     const result = await MessageService.deleteMessage(req.params.id as string);
     res.status(200).json(result);
   }
+
+  static async GetAllBAD(req: Request, res: Response) {
+    const { userId } = req.user as AuthenticatedUser;
+    const result = await MessageService.getScheduledMessages(userId);
+    res.status(200).json(result);
+  }
 }

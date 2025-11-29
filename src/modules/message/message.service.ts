@@ -204,6 +204,200 @@ export class MessageService {
     return ApiSuccess.ok("Messages fetched successfully", { messages });
   }
 
+  // Option 2: Filter by status = "scheduled"
+  static async getScheduledMessages(userId: Types.ObjectId) {
+    const messages = await MessageModel.find({
+      // createdBy: userId,
+      status: "scheduled",
+    }).populate("recipients");
+
+    console.log({
+      gggg: messages[0],
+      gggg2: messages[0].recipients,
+    });
+
+    return ApiSuccess.ok("Scheduled messages fetched successfully", {
+      messages,
+    });
+  }
+
+  // static async sendScheduledMessages() {
+  //   const now = new Date();
+
+  //   // Get start and end of today (ignore time, just date)
+  //   const startOfToday = new Date(
+  //     now.getFullYear(),
+  //     now.getMonth(),
+  //     now.getDate(),
+  //     0,
+  //     0,
+  //     0
+  //   );
+  //   const endOfToday = new Date(
+  //     now.getFullYear(),
+  //     now.getMonth(),
+  //     now.getDate(),
+  //     23,
+  //     59,
+  //     59
+  //   );
+
+  //   // Get all scheduled messages for today
+  //   const messages = await MessageModel.find({
+  //     status: "scheduled",
+  //     scheduleAt: {
+  //       $gte: startOfToday, // From start of today
+  //       $lte: endOfToday, // To end of today
+  //     },
+  //   }).populate("recipients");
+
+  //   const results = [];
+
+  //   for (const message of messages) {
+  //     // Get all contacts in those groups that belong to THIS user (multi-tenant isolation)
+  //     const contacts = await ContactModel.find({
+  //       user: message.createdBy,
+  //       group: { $in: message.recipients },
+  //     });
+
+  //     // Extract phone numbers/emails based on message type
+  //     let recipients: string[] = [];
+
+  //     if (message.messageType === "sms" || message.messageType === "whatsapp") {
+  //       recipients = contacts.map((contact) => contact.phoneNumber);
+  //     } else if (message.messageType === "email") {
+  //       recipients = contacts
+  //         .map((contact) => contact.email)
+  //         .filter((email) => email);
+  //     }
+
+  //     const messageText = message.message;
+
+  //     // Send the message
+  //     // await yourSmsService.send(recipients, messageText);
+
+  //     // Update message status
+  //     // message.status = "sent";
+  //     // message.sentAt = new Date();
+  //     // await message.save();
+
+  //     results.push({
+  //       userId: message.createdBy,
+  //       messageId: message._id,
+  //       recipients,
+  //       messageText,
+  //     });
+  //   }
+
+  //   console.log({
+  //     tyuu: results,
+  //   });
+
+  //   return results;
+  // }
+
+  static async sendScheduledMessages() {
+    const now = new Date();
+
+    // Get start and end of today (ignore time, just date)
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      0,
+      0,
+      0
+    );
+    const endOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23,
+      59,
+      59
+    );
+
+    // Get all scheduled messages for today
+    const messages = await MessageModel.find({
+      status: "scheduled",
+      scheduleAt: {
+        $gte: startOfToday,
+        $lte: endOfToday,
+      },
+    }).populate("recipients");
+
+    const results = [];
+
+    for (const message of messages) {
+      // Get all contacts in those groups that belong to THIS user (multi-tenant isolation)
+      const contacts = await ContactModel.find({
+        user: message.createdBy,
+        group: { $in: message.recipients },
+      });
+
+      // Extract phone numbers/emails based on message type
+      let recipients: string[] = [];
+
+      if (message.messageType === "sms" || message.messageType === "whatsapp") {
+        recipients = contacts.map((contact) => contact.phoneNumber);
+      } else if (message.messageType === "email") {
+        recipients = contacts
+          .map((contact) => contact.email)
+          .filter((email) => email);
+      }
+
+      const messageText = message.message;
+
+      try {
+        // Send the message based on type
+        if (message.messageType === "sms") {
+          const smsPayload = {
+            to: recipients,
+            sms: messageText,
+          };
+          await MessageSender.sendBulkSMSV2(smsPayload);
+        }
+        // Add whatsapp and email handlers here if needed
+        // else if (message.messageType === "whatsapp") { ... }
+        // else if (message.messageType === "email") { ... }
+
+        // Update message status to sent
+        message.status = "sent";
+        message.sentAt = new Date();
+        await message.save();
+
+        results.push({
+          userId: message.createdBy,
+          messageId: message._id,
+          recipients,
+          messageText,
+          status: "sent",
+          success: true,
+        });
+      } catch (error) {
+        // If sending fails, mark as failed
+        message.status = "failed";
+        await message.save();
+
+        results.push({
+          userId: message.createdBy,
+          messageId: message._id,
+          recipients,
+          messageText,
+          status: "failed",
+          success: false,
+          error: error.message,
+        });
+      }
+    }
+
+    console.log({
+      scheduledMessagesSent: results,
+    });
+
+    return results;
+  }
+
   static async getMessageById(id: string, userId: Types.ObjectId) {
     const message = await MessageModel.findOne({
       _id: id,

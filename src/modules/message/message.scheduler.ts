@@ -29,6 +29,7 @@ export class MessageScheduler {
     let data = await BirthdayService.automaticBirthdayMessageJob();
     return data;
   }
+
   static async createMessage(data: any, userId: Types.ObjectId) {
     const rawContacts = await this.resolveContacts(data.recipients);
     const contacts = dedupeContacts(rawContacts);
