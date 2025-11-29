@@ -22,6 +22,7 @@ import { seedGroups } from "./modules/group/seedGroups";
 
 import cron from "node-cron";
 import { MessageScheduler } from "./modules/message/message.scheduler";
+import { MessageService } from "./modules/message/message.service";
 
 const app = express();
 
@@ -100,12 +101,19 @@ app.use(errorMiddleware);
 // cron.schedule("*/10 * * * * *", async (ctx) => {
 // cron.schedule("0 8 * * *", async (ctx) => {
 // cron.schedule("30 15 * * *", async (ctx) => {
+
 cron.schedule("10 8 * * *", async (ctx) => {
   console.log(`Triggered At: ${ctx.triggeredAt.toISOString()}`);
   console.log(`Scheduled For: ${ctx.dateLocalIso}`);
   console.log(`Task Status: ${ctx.task.getStatus()}`);
-
   await MessageScheduler.birthdayjob();
+});
+cron.schedule("*/10 * * * * *", async (ctx) => {
+  // cron.schedule("10 8 * * *", async (ctx) => {
+  console.log(`Triggered At: ${ctx.triggeredAt.toISOString()}`);
+  console.log(`Scheduled For: ${ctx.dateLocalIso}`);
+  console.log(`Task Status: ${ctx.task.getStatus()}`);
+  await MessageService.sendScheduledMessages();
 });
 const startServer = async () => {
   try {

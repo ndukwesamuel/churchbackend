@@ -13,6 +13,11 @@ router
   .get(MessageController.getMessages);
 
 router
+  .route("/fas")
+
+  .get(MessageController.GetAllBAD);
+
+router
   .route("/:id")
   .get(MessageController.getMessageById)
   .put(MessageController.updateMessage)
