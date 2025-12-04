@@ -3,12 +3,15 @@ import { GroupService } from "./group.service";
 
 export class GroupController {
   static async createGroup(req: Request, res: Response) {
-    const result = await GroupService.createGroup(req.body);
+    const { userId } = req.user;
+    const group_body = req.body;
+    const result = await GroupService.createGroup(userId, group_body);
     res.status(201).json(result);
   }
 
-  static async getGroups(_req: Request, res: Response) {
-    const result = await GroupService.getGroups();
+  static async getGroups(req: Request, res: Response) {
+    const { userId } = req.user;
+    const result = await GroupService.getGroups(userId);
     res.status(200).json(result);
   }
 

@@ -26,6 +26,14 @@ import { MessageService } from "./modules/message/message.service";
 
 const app = express();
 
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -42,13 +50,13 @@ app.use(
 );
 app.use(helmet());
 
-app.use(
-  fileUpload({
-    useTempFiles: true,
-    tempFileDir: "/tmp/",
-    // limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit if needed
-  })
-);
+// app.use(
+//   fileUpload({
+//     useTempFiles: true,
+//     tempFileDir: "/tmp/",
+//     // limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit if needed
+//   })
+// );
 
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
   console.log("Request received at root endpoint");
@@ -118,7 +126,7 @@ cron.schedule("10 8 * * *", async (ctx) => {
 const startServer = async () => {
   try {
     await connectDB();
-    // await agenda.start();
+    await agenda.start();
     // await scheduleBirthdayMessages();
     // seedCategories();
     // seedGroups();

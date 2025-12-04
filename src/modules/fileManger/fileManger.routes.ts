@@ -30,7 +30,7 @@ router
 
 router
   .route("/add-fileToFolder")
-  .post(fileMangerController.AddFileToFolders)
+  // .post(fileMangerController.AddFileToFolders)
   .patch(fileMangerController.AddFileToFoldersSingle)
   // .post(ContactsController.createContacts)
   .all(methodNotAllowed);

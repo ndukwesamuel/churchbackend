@@ -87,8 +87,16 @@ export class fileMangerController {
 
   static async AddFileToFoldersSingle(req: Request, res: Response) {
     try {
+      console.log({
+        yyyy: "kfkfkfkfk",
+      });
+
       const { userId } = req.user as AuthenticatedUser;
       const { folder_id } = req.body;
+
+      console.log({
+        cccc: req.files,
+      });
 
       if (!folder_id) {
         throw ApiError.badRequest("Folder ID is required");

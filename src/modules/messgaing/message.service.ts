@@ -29,12 +29,12 @@ export interface IResendBulkPayload {
 
 class MessageService {
   static async sendBulkSMSV2(payload: ITermiiBulkPayload) {
+    console.log("Sending bulk SMS via Termii with payload:", payload);
     const maindata = {
       api_key: env.TERMII_API_KEY,
       to: payload.to,
-      // to: ["2349167703400", "2349125778176"], //"2348065108162"],
-      // from: "CHURCHSMS",
-      from: "N-Alert",
+      // to: ["2348065108162", "2349167703400"],
+      from: "CHURCHSMS",
       sms: payload.sms, //"Hi there, testing Termii bulk send with the new service structure.",
       type: "plain",
       channel: "generic",
@@ -111,7 +111,7 @@ class MessageService {
   static async sendBulkWhatsApp(payload: ITermiiBulkPayload) {
     const maindata = {
       api_key: env.TERMII_API_KEY,
-      to: payload.to,
+      // to: payload.to,
       // to: ["2349167703400", "2349125778176"], //"2348065108162"],
 
       from: "CHURCHSMS", // The Sender ID for your WhatsApp account
@@ -185,6 +185,7 @@ class MessageService {
     const maindata = {
       api_key: env.TERMII_API_KEY,
       to: payload.to,
+
       from: "CHURCHSMS", // The Sender ID for your WhatsApp account
       sms: payload.sms,
       type: "plain",
@@ -330,14 +331,6 @@ class MessageService {
   // }
 
   static async sendBulkEmail(payload: IResendBulkPayload) {
-    console.log({
-      yuii: payload,
-    });
-
-    console.log({
-      xxx_emailTo: payload,
-    });
-
     const emailSubject = payload.subject; //"Bulk Test Email from Church";
     const emailHtml = payload.html;
     const recipients = payload.to;
