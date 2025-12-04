@@ -199,9 +199,13 @@ export class MessageService {
     }).lean();
   }
   static async getMessages(userId: Types.ObjectId) {
-    const messages = await MessageModel.find({ createdBy: userId }).populate(
-      "recipients"
-    );
+    // const messages = await MessageModel.find({ createdBy: userId }).populate(
+    //   "recipients"
+    // ).sort;
+
+    const messages = await MessageModel.find({ createdBy: userId })
+      .populate("recipients")
+      .sort({ createdAt: -1 }); // newest first
     return ApiSuccess.ok("Messages fetched successfully", { messages });
   }
 
