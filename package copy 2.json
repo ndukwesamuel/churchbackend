@@ -6,11 +6,11 @@
   "main": "src/index.ts",
   "private": true,
   "scripts": {
-    "build": "echo 'Build skipped - using tsx'",
-    "start": "tsx src/index.ts",
-    "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts | pino-pretty",
-    "test": "echo \"No tests yet\"",
-    "lint": "echo \"No linting configured\""
+    "build": "bun build src/index.ts --outdir=dist --minify",
+    "start": "bun src/index.ts | pino-pretty",
+    "dev": "nodemon --watch src --ext ts --exec bun run /src/index.ts | pino-pretty",
+    "test": "bun test",
+    "lint": "bun run lint"
   },
   "devDependencies": {
     "@types/bun": "latest",
