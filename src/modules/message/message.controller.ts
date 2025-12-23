@@ -5,6 +5,10 @@ import type { AuthenticatedUser } from "../user/user.interface";
 export class MessageController {
   static async createMessage(req: Request, res: Response) {
     const { userId } = req.user as AuthenticatedUser;
+    console.log({
+      yuuu: userId,
+    });
+
     const result = await MessageService.createMessage(req.body, userId);
     res.status(201).json(result);
   }

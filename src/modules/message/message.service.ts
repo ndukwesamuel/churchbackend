@@ -25,8 +25,10 @@ function dedupeContacts(contacts: any[]) {
 
 export class MessageService {
   static async createMessage(data: any, userId: Types.ObjectId) {
-    const rawContacts = await this.resolveContacts(data.recipients);
+    const rawContacts = await this.UserContacts(data.recipients, userId);
+
     const contacts = dedupeContacts(rawContacts);
+
     const totalRecipients = contacts.length;
     const totalCost = totalRecipients * (COST_PER_TYPE[data.messageType] ?? 0);
 
@@ -36,6 +38,10 @@ export class MessageService {
       totalRecipients,
       totalCost,
     };
+
+    console.log({
+      basePayload: basePayload,
+    });
 
     // Draft
     if (data.status === "draft") {
@@ -67,23 +73,32 @@ export class MessageService {
         status: "sent",
         sentAt: new Date(),
       });
+
+      console.log({
+        yuuu: message,
+      });
+
       const payload = {
         to: contacts.map((c) => c.phoneNumber),
         sms: data.message,
       };
-
       const emailPayload = {
         from: "",
         to: contacts.map((c) => c.email),
         subject: "Email subject",
         html: data.message,
       };
+
+      console.log({
+        tttt: payload,
+        rrrr: emailPayload,
+      });
+
       // console.log(emailPayload);
       // Directly delegate to the right provider
       switch (data.messageType) {
         case "sms":
           return await MessageSender.sendBulkSMSV2(payload);
-
         case "email":
           console.log({
             gyuuu: emailPayload,
@@ -93,56 +108,26 @@ export class MessageService {
           const emailText = emailPayload.html;
           const recipients = emailPayload.to;
 
-          // const emailHtml =
-          //   "<h1>This is a bulk test email</h1><p>Bulk email is working!</p>";
-
-          // const recipients = [
-          //   "kenechukwuokoh30@gmail.com",
-          //   "ndukwesamuel23@gmail.com",
-          //   // Add more emails as needed
-          // ];
-
           const result = await sendBulkEmail_Brevo({
             to: recipients,
             subject: emailSubject,
             text: emailText,
             html: emailHtml,
           });
-
           console.log({
             gyy: result,
             xxxx: result.results,
           });
-
           return result;
 
-        // return await MessageSender.sendBulkEmail(emailPayload);
-        // return await MessageSender.sendBulkEmail_Brevo(emailPayload);
-
-        // const emailData: BulkEmailData = {
-        //   subject: data.subject,
-        //   htmlContent: data.message, // assuming message is HTML body
-        //   textContent: data.textContent || data.message, // fallback
-        //   senderName: data.senderName || "Elpis",
-        //   senderEmail: data.senderEmail || "75e89f001@smtp-brevo.com",
-        //   recipients: contacts.map((c) => ({
-        //     name: c.fullName,
-        //     email: c.email,
-        //   })),
-        //   replyTo: data.replyTo,
-        //   userId,
-        // };
-
-        // return await MessageSender2.sendBulkEmail(emailData);
         case "whatsapp":
           return await MessageSender.sendBulkWhatsApp(payload);
-
         default:
           throw ApiError.badRequest("Unsupported message type");
       }
     }
 
-    throw ApiError.badRequest("Invalid status");
+    // throw ApiError.badRequest("Invalid status");
   }
 
   static async sendScheduledMessage(messageId: string) {
@@ -195,6 +180,14 @@ export class MessageService {
   static async resolveContacts(groupIds: string[]) {
     return ContactModel.find({
       group: { $in: groupIds },
+      status: "active",
+    }).lean();
+  }
+
+  static async UserContacts(groupIds: string[], user) {
+    return ContactModel.find({
+      group: { $in: groupIds },
+      user: user,
       status: "active",
     }).lean();
   }
