@@ -4,6 +4,7 @@ import contactsModel from "./contacts.model";
 import type { IContacts } from "./contacts.interface";
 import type { IGroup } from "../group/group.interface";
 import mongoose from "mongoose";
+import churchModel from "../church/church.model";
 class ContactsService {
   static async getChurchContact(userId: ObjectId) {
     const members = await this.findALLChurchMembersContact(userId);
@@ -36,38 +37,6 @@ class ContactsService {
     });
   }
 
-  // static async createContact(userId: ObjectId, contactData: any) {
-  //   const contactPayload: any = {
-  //     user: userId,
-  //     fullName: contactData.fullName,
-  //     email: contactData.email,
-  //     phoneNumber: contactData.phoneNumber,
-  //   };
-  //   if (contactData.groupId) {
-  //     contactPayload.group = contactData.groupId; // ✅ only set if valid
-  //   }
-
-  //   const contact = await contactsModel.create(contactPayload);
-
-  //   return ApiSuccess.ok("Contact created successfully", { contact });
-  // }
-
-  // static async UpdateContact(userId: ObjectId, id: any, contactData: any) {
-  //   const updatedContact = await contactsModel.findByIdAndUpdate(
-  //     id,
-  //     contactData,
-  //     {
-  //       new: true, // return updated doc
-  //       runValidators: true, // apply schema validators
-  //     }
-  //   );
-  //   if (!updatedContact) {
-  //     throw ApiError.notFound("Contact not found");
-  //   }
-
-  //   return ApiSuccess.ok("Contact updated successfully", { updatedContact });
-  // }
-
   static async createContact(userId: ObjectId, contactData: any) {
     const contactPayload: any = {
       user: userId,
@@ -96,47 +65,6 @@ class ContactsService {
 
     return ApiSuccess.ok("Contact created successfully", { contact });
   }
-
-  // Update method should also handle birthday fields
-  // static async updateContact(
-  //   userId: ObjectId,
-  //   contactId: ObjectId,
-  //   contactData: any
-  // ) {
-  //   const updatePayload: any = {
-  //     fullName: contactData.fullName,
-  //     email: contactData.email,
-  //     phoneNumber: contactData.phoneNumber,
-  //     status: contactData.status,
-  //     role: contactData.role,
-  //   };
-
-  //   // Add group if provided
-  //   if (contactData.groupId) {
-  //     updatePayload.group = contactData.groupId;
-  //   }
-
-  //   // Add birthday fields if provided
-  //   if (contactData.birthDay !== undefined) {
-  //     updatePayload.birthDay = contactData.birthDay;
-  //   }
-
-  //   if (contactData.birthMonth !== undefined) {
-  //     updatePayload.birthMonth = contactData.birthMonth;
-  //   }
-
-  //   const contact = await contactsModel.findOneAndUpdate(
-  //     { _id: contactId, user: userId },
-  //     updatePayload,
-  //     { new: true, runValidators: true }
-  //   );
-
-  //   if (!contact) {
-  //     throw ApiError.notFound("Contact not found");
-  //   }
-
-  //   return ApiSuccess.ok("Contact updated successfully", { contact });
-  // }
 
   static async updateContact(
     userId: ObjectId,
@@ -214,6 +142,25 @@ class ContactsService {
   }
 
   // ContactsService.ts (New method)
+  private static monthToNumber(month: string): string {
+    const monthMap: { [key: string]: string } = {
+      january: "1",
+      february: "2",
+      march: "3",
+      april: "4",
+      may: "5",
+      june: "6",
+      july: "7",
+      august: "8",
+      september: "9",
+      october: "10",
+      november: "11",
+      december: "12",
+    };
+
+    const normalized = month.toLowerCase().trim();
+    return monthMap[normalized] || month; // Return original if not found
+  }
 
   static async bulkCreateContacts(userId: ObjectId, contactDataArray: any[]) {
     // 1. Prepare the final list of documents to insert
@@ -251,6 +198,17 @@ class ContactsService {
           contactPayload.group = contactData.groupId;
         }
 
+        // Add birthday fields if provided
+        if (contactData.birthDay) {
+          contactPayload.birthDay = contactData.birthDay;
+        }
+
+        if (contactData.birthMonth) {
+          // Convert month name to number string
+          contactPayload.birthMonth = ContactsService.monthToNumber(
+            contactData.birthMonth
+          );
+        }
         contactsToInsert.push(contactPayload);
       } catch (error) {
         // Catch errors during phone number standardization or other preparation
@@ -260,6 +218,11 @@ class ContactsService {
         });
       }
     }
+
+    console.log({
+      eee: contactDataArray,
+      rrrr: contactsToInsert,
+    });
 
     // 3. Perform the bulk insert if there are contacts to add
     let insertedContacts = [];
@@ -306,7 +269,6 @@ class ContactsService {
     });
   }
 
-  // You must also add the standardization function to your Service class
   static standardizePhoneNumber(inputNumber: any): string {
     if (!inputNumber) return "";
     // Ensure the input is treated as a string for replacement
