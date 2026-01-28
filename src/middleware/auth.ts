@@ -12,11 +12,12 @@ const isAuth = asyncWrapper(
     }
 
     const token = authHeader.split(" ")[1];
+
     const payload = verifyToken(token as string);
 
     req.user = payload;
     next();
-  }
+  },
 );
 
 export { isAuth };

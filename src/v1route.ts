@@ -13,6 +13,7 @@ import MessageRoutes from "./modules/message/message.route";
 import mainMessageRoutes from "./modules/messgaing/message.routes";
 import DashboardRoutes from "./modules/dashboard/dashboard.route";
 import BirthdayRoutes from "./modules/birthday/birthday.routes";
+import EventRoutes from "./modules/event/event.routes";
 import sendEmail, { sendBulkEmail_Brevo } from "./utils/email";
 const router = express.Router();
 
@@ -72,5 +73,7 @@ router.use("/messages", isAuth, MessageRoutes);
 router.use("/main", mainMessageRoutes);
 router.use("/dashboard", isAuth, DashboardRoutes);
 router.use("/birthday", isAuth, BirthdayRoutes);
+router.use("/birthday", isAuth, BirthdayRoutes);
+router.use("/event", EventRoutes);
 
 export default router;
