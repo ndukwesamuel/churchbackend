@@ -8,8 +8,6 @@ import eventRegistrationController from "./eventRegistration.controller";
 
 const router = express.Router();
 
-// Protected routes (require authentication)
-// router.post("/", isAuth, eventController.createEvent);
 router
   .route("/")
   .post(isAuth, eventController.createEvent)
@@ -20,6 +18,7 @@ router
   .route("/:eventId")
   .get(isAuth, eventController.getEvent)
   .post(isAuth, eventController.updateEvent)
+  .delete(isAuth, eventController.deleteEvent)
   .all(methodNotAllowed);
 
 router.patch("/:eventId/status", isAuth, eventController.updateEventStatus);
@@ -31,9 +30,6 @@ router.get(
   eventRegistrationController.getEventRegistrations,
 );
 
-// router.post("/:eventId", isAuth, eventController.updateEvent);
-// router.delete("/:eventId", authMiddleware, eventController.deleteEvent);
-
 router.get("/:eventId/stats", isAuth, eventController.getEventStats);
 // router.post(
 //   "/:eventId/duplicate",
@@ -42,6 +38,29 @@ router.get("/:eventId/stats", isAuth, eventController.getEventStats);
 // );
 
 // // Public route (no auth)
+
+router.patch(
+  "/registration/:registrationId/status",
+  isAuth,
+  eventRegistrationController.updateRegistrationStatus,
+);
+
+router.patch(
+  "/registrations/bulk-status",
+  isAuth,
+  eventRegistrationController.bulkUpdateStatus,
+);
+
+router.get(
+  "/:eventId/export",
+  isAuth,
+  eventRegistrationController.exportRegistrations,
+);
+router.delete(
+  "/registration/:registrationId",
+  isAuth,
+  eventRegistrationController.deleteRegistration,
+);
 
 router
   .route("/public/:eventId")
@@ -54,10 +73,10 @@ router.get(
   eventRegistrationController.checkRegistration,
 );
 
-// // Public registration endpoint
-// router.post(
-//   "/:eventId/register",
-//   optionalAuthMiddleware, // optional - captures user if logged in
-//   eventRegistrationController.registerForEvent,
-// );
+router.get(
+  "/registration/:registrationId",
+  isAuth,
+  eventRegistrationController.getRegistration,
+);
+
 export default router;

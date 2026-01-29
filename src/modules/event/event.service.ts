@@ -66,11 +66,11 @@ class EventService {
     session.startTransaction();
     try {
       // Delete event
-      const result = await Event.deleteOne({ _id: eventId, churchId }).session(
-        session,
-      );
+      const result = await eventModel
+        .deleteOne({ _id: eventId, churchId })
+        .session(session);
       // Delete all registrations for this event
-      await EventRegistration.deleteMany({ eventId }).session(session);
+      await eventRegistrationModel.deleteMany({ eventId }).session(session);
       await session.commitTransaction();
       return result.deletedCount > 0;
     } catch (error) {

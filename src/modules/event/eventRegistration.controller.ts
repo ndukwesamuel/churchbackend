@@ -81,177 +81,177 @@ class EventRegistrationController {
     }
   }
 
-  // // Get single registration
-  // async getRegistration(req: Request, res: Response) {
-  //   try {
-  //     const { registrationId } = req.params;
-  //     const churchId = req.user?.churchId;
+  // Get single registration
+  async getRegistration(req: Request, res: Response) {
+    try {
+      const { registrationId } = req.params;
+      const churchId = req.user?.userId;
 
-  //     if (!churchId) {
-  //       return res.status(401).json({
-  //         success: false,
-  //         message: "Unauthorized",
-  //       });
-  //     }
+      if (!churchId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
 
-  //     const registration = await eventRegistrationService.getRegistrationById(
-  //       registrationId,
-  //       churchId,
-  //     );
+      const registration = await eventRegistrationService.getRegistrationById(
+        registrationId,
+        churchId,
+      );
 
-  //     if (!registration) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: "Registration not found",
-  //       });
-  //     }
+      if (!registration) {
+        return res.status(404).json({
+          success: false,
+          message: "Registration not found",
+        });
+      }
 
-  //     res.status(200).json({
-  //       success: true,
-  //       data: registration,
-  //     });
-  //   } catch (error: any) {
-  //     console.error("Get registration error:", error);
-  //     res.status(500).json({
-  //       success: false,
-  //       message: error.message || "Failed to fetch registration",
-  //     });
-  //   }
-  // }
+      res.status(200).json({
+        success: true,
+        data: registration,
+      });
+    } catch (error: any) {
+      console.error("Get registration error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to fetch registration",
+      });
+    }
+  }
 
-  // // Update registration status
-  // async updateRegistrationStatus(req: Request, res: Response) {
-  //   try {
-  //     const { registrationId } = req.params;
-  //     const { status } = req.body;
-  //     const churchId = req.user?.churchId;
+  // Update registration status
+  async updateRegistrationStatus(req: Request, res: Response) {
+    try {
+      const { registrationId } = req.params;
+      const { status } = req.body;
+      const churchId = req.user?.userId;
 
-  //     if (!churchId) {
-  //       return res.status(401).json({
-  //         success: false,
-  //         message: "Unauthorized",
-  //       });
-  //     }
+      if (!churchId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
 
-  //     if (!["pending", "confirmed", "cancelled", "attended"].includes(status)) {
-  //       return res.status(400).json({
-  //         success: false,
-  //         message: "Invalid status",
-  //       });
-  //     }
+      if (!["pending", "confirmed", "cancelled", "attended"].includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid status",
+        });
+      }
 
-  //     const registration =
-  //       await eventRegistrationService.updateRegistrationStatus(
-  //         registrationId,
-  //         churchId,
-  //         status,
-  //       );
+      const registration =
+        await eventRegistrationService.updateRegistrationStatus(
+          registrationId,
+          churchId,
+          status,
+        );
 
-  //     if (!registration) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: "Registration not found",
-  //       });
-  //     }
+      if (!registration) {
+        return res.status(404).json({
+          success: false,
+          message: "Registration not found",
+        });
+      }
 
-  //     res.status(200).json({
-  //       success: true,
-  //       message: "Registration status updated successfully",
-  //       data: registration,
-  //     });
-  //   } catch (error: any) {
-  //     console.error("Update registration status error:", error);
-  //     res.status(500).json({
-  //       success: false,
-  //       message: error.message || "Failed to update registration status",
-  //     });
-  //   }
-  // }
+      res.status(200).json({
+        success: true,
+        message: "Registration status updated successfully",
+        data: registration,
+      });
+    } catch (error: any) {
+      console.error("Update registration status error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to update registration status",
+      });
+    }
+  }
 
-  // // Bulk update registration status
-  // async bulkUpdateStatus(req: Request, res: Response) {
-  //   try {
-  //     const { registrationIds, status } = req.body;
-  //     const churchId = req.user?.churchId;
+  // Bulk update registration status
+  async bulkUpdateStatus(req: Request, res: Response) {
+    try {
+      const { registrationIds, status } = req.body;
+      const churchId = req.user?.userId;
 
-  //     if (!churchId) {
-  //       return res.status(401).json({
-  //         success: false,
-  //         message: "Unauthorized",
-  //       });
-  //     }
+      if (!churchId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
 
-  //     if (!Array.isArray(registrationIds) || registrationIds.length === 0) {
-  //       return res.status(400).json({
-  //         success: false,
-  //         message: "Invalid registration IDs",
-  //       });
-  //     }
+      if (!Array.isArray(registrationIds) || registrationIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid registration IDs",
+        });
+      }
 
-  //     if (!["pending", "confirmed", "cancelled", "attended"].includes(status)) {
-  //       return res.status(400).json({
-  //         success: false,
-  //         message: "Invalid status",
-  //       });
-  //     }
+      if (!["pending", "confirmed", "cancelled", "attended"].includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid status",
+        });
+      }
 
-  //     const count = await eventRegistrationService.bulkUpdateStatus(
-  //       registrationIds,
-  //       churchId,
-  //       status,
-  //     );
+      const count = await eventRegistrationService.bulkUpdateStatus(
+        registrationIds,
+        churchId,
+        status,
+      );
 
-  //     res.status(200).json({
-  //       success: true,
-  //       message: `${count} registration(s) updated successfully`,
-  //       data: { updatedCount: count },
-  //     });
-  //   } catch (error: any) {
-  //     console.error("Bulk update error:", error);
-  //     res.status(500).json({
-  //       success: false,
-  //       message: error.message || "Failed to update registrations",
-  //     });
-  //   }
-  // }
+      res.status(200).json({
+        success: true,
+        message: `${count} registration(s) updated successfully`,
+        data: { updatedCount: count },
+      });
+    } catch (error: any) {
+      console.error("Bulk update error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to update registrations",
+      });
+    }
+  }
 
-  // // Delete registration
-  // async deleteRegistration(req: Request, res: Response) {
-  //   try {
-  //     const { registrationId } = req.params;
-  //     const churchId = req.user?.churchId;
+  // Delete registration
+  async deleteRegistration(req: Request, res: Response) {
+    try {
+      const { registrationId } = req.params;
+      const churchId = req.user?.userId;
 
-  //     if (!churchId) {
-  //       return res.status(401).json({
-  //         success: false,
-  //         message: "Unauthorized",
-  //       });
-  //     }
+      if (!churchId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
 
-  //     const deleted = await eventRegistrationService.deleteRegistration(
-  //       registrationId,
-  //       churchId,
-  //     );
+      const deleted = await eventRegistrationService.deleteRegistration(
+        registrationId,
+        churchId,
+      );
 
-  //     if (!deleted) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: "Registration not found",
-  //       });
-  //     }
+      if (!deleted) {
+        return res.status(404).json({
+          success: false,
+          message: "Registration not found",
+        });
+      }
 
-  //     res.status(200).json({
-  //       success: true,
-  //       message: "Registration deleted successfully",
-  //     });
-  //   } catch (error: any) {
-  //     console.error("Delete registration error:", error);
-  //     res.status(500).json({
-  //       success: false,
-  //       message: error.message || "Failed to delete registration",
-  //     });
-  //   }
-  // }
+      res.status(200).json({
+        success: true,
+        message: "Registration deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Delete registration error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to delete registration",
+      });
+    }
+  }
 
   // Check if user is already registered
   async checkRegistration(req: Request, res: Response) {
@@ -288,37 +288,37 @@ class EventRegistrationController {
     }
   }
 
-  // // Export registrations
-  // async exportRegistrations(req: Request, res: Response) {
-  //   try {
-  //     const { eventId } = req.params;
-  //     const churchId = req.user?.churchId;
+  // Export registrations
+  async exportRegistrations(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params;
+      const churchId = req.user?.userId;
 
-  //     if (!churchId) {
-  //       return res.status(401).json({
-  //         success: false,
-  //         message: "Unauthorized",
-  //       });
-  //     }
+      if (!churchId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
 
-  //     const exportData = await eventRegistrationService.exportRegistrations(
-  //       eventId,
-  //       churchId,
-  //     );
+      const exportData = await eventRegistrationService.exportRegistrations(
+        eventId,
+        churchId,
+      );
 
-  //     res.status(200).json({
-  //       success: true,
-  //       data: exportData,
-  //       count: exportData.length,
-  //     });
-  //   } catch (error: any) {
-  //     console.error("Export registrations error:", error);
-  //     res.status(500).json({
-  //       success: false,
-  //       message: error.message || "Failed to export registrations",
-  //     });
-  //   }
-  // }
+      res.status(200).json({
+        success: true,
+        data: exportData,
+        count: exportData.length,
+      });
+    } catch (error: any) {
+      console.error("Export registrations error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to export registrations",
+      });
+    }
+  }
 }
 
 export default new EventRegistrationController();

@@ -186,61 +186,63 @@ class EventRegistrationService {
       .lean();
     return registrations as IEventRegistration[];
   }
-  //   // Get single registration
-  //   async getRegistrationById(
-  //     registrationId: string,
-  //     churchId: string,
-  //   ): Promise<IEventRegistration | null> {
-  //     const registration = await EventRegistration.findOne({
-  //       _id: registrationId,
-  //       churchId,
-  //     }).lean();
-  //     return registration as IEventRegistration | null;
-  //   }
-  //   // Update registration status
-  //   async updateRegistrationStatus(
-  //     registrationId: string,
-  //     churchId: string,
-  //     status: "pending" | "confirmed" | "cancelled" | "attended",
-  //   ): Promise<IEventRegistration | null> {
-  //     const registration = await EventRegistration.findOneAndUpdate(
-  //       { _id: registrationId, churchId },
-  //       { $set: { status } },
-  //       { new: true },
-  //     );
-  //     return registration;
-  //   }
-  //   // Bulk update registration status
-  //   async bulkUpdateStatus(
-  //     registrationIds: string[],
-  //     churchId: string,
-  //     status: "pending" | "confirmed" | "cancelled" | "attended",
-  //   ): Promise<number> {
-  //     const result = await EventRegistration.updateMany(
-  //       { _id: { $in: registrationIds }, churchId },
-  //       { $set: { status } },
-  //     );
-  //     return result.modifiedCount;
-  //   }
-  //   // Delete registration
-  //   async deleteRegistration(
-  //     registrationId: string,
-  //     churchId: string,
-  //   ): Promise<boolean> {
-  //     const registration = await EventRegistration.findOne({
-  //       _id: registrationId,
-  //       churchId,
-  //     });
-  //     if (!registration) {
-  //       return false;
-  //     }
-  //     await EventRegistration.deleteOne({ _id: registrationId });
-  //     // Update event registration count
-  //     await Event.findByIdAndUpdate(registration.eventId, {
-  //       $inc: { registrationCount: -1 },
-  //     });
-  //     return true;
-  //   }
+  // Get single registration
+  async getRegistrationById(
+    registrationId: string,
+    churchId: string,
+  ): Promise<IEventRegistration | null> {
+    const registration = await eventRegistrationModel
+      .findOne({
+        _id: registrationId,
+        churchId,
+      })
+      .lean();
+    return registration as IEventRegistration | null;
+  }
+  // Update registration status
+  async updateRegistrationStatus(
+    registrationId: string,
+    churchId: string,
+    status: "pending" | "confirmed" | "cancelled" | "attended",
+  ): Promise<IEventRegistration | null> {
+    const registration = await eventRegistrationModel.findOneAndUpdate(
+      { _id: registrationId, churchId },
+      { $set: { status } },
+      { new: true },
+    );
+    return registration;
+  }
+  // Bulk update registration status
+  async bulkUpdateStatus(
+    registrationIds: string[],
+    churchId: string,
+    status: "pending" | "confirmed" | "cancelled" | "attended",
+  ): Promise<number> {
+    const result = await eventRegistrationModel.updateMany(
+      { _id: { $in: registrationIds }, churchId },
+      { $set: { status } },
+    );
+    return result.modifiedCount;
+  }
+  // Delete registration
+  async deleteRegistration(
+    registrationId: string,
+    churchId: string,
+  ): Promise<boolean> {
+    const registration = await eventRegistrationModel.findOne({
+      _id: registrationId,
+      churchId,
+    });
+    if (!registration) {
+      return false;
+    }
+    await eventRegistrationModel.deleteOne({ _id: registrationId });
+    // Update event registration count
+    await eventModel.findByIdAndUpdate(registration.eventId, {
+      $inc: { registrationCount: -1 },
+    });
+    return true;
+  }
   // Get registration by email and event
   async getRegistrationByEmail(
     eventId: string,
@@ -254,35 +256,36 @@ class EventRegistrationService {
       .lean();
     return registration as IEventRegistration | null;
   }
-  //   // Export registrations (get data for CSV export)
-  //   async exportRegistrations(eventId: string, churchId: string): Promise<any[]> {
-  //     const event = await Event.findOne({ _id: eventId, churchId });
-  //     if (!event) {
-  //       throw new Error("Event not found");
-  //     }
-  //     const registrations = await EventRegistration.find({ eventId, churchId })
-  //       .sort({ registeredAt: 1 })
-  //       .lean();
-  //     // Flatten responses for CSV export
-  //     const exportData = registrations.map((reg) => {
-  //       const flatData: any = {
-  //         registrationId: reg._id,
-  //         registrantName: reg.registrantName,
-  //         registrantEmail: reg.registrantEmail,
-  //         status: reg.status,
-  //         registeredAt: reg.registeredAt,
-  //       };
-  //       // Add all form field responses
-  //       for (const field of event.formFields) {
-  //         const value = reg.responses[field.fieldId];
-  //         flatData[field.label] = Array.isArray(value)
-  //           ? value.join(", ")
-  //           : value || "";
-  //       }
-  //       return flatData;
-  //     });
-  //     return exportData;
-  //   }
+  // Export registrations (get data for CSV export)
+  async exportRegistrations(eventId: string, churchId: string): Promise<any[]> {
+    const event = await eventModel.findOne({ _id: eventId, churchId });
+    if (!event) {
+      throw new Error("Event not found");
+    }
+    const registrations = await eventRegistrationModel
+      .find({ eventId, churchId })
+      .sort({ registeredAt: 1 })
+      .lean();
+    // Flatten responses for CSV export
+    const exportData = registrations.map((reg) => {
+      const flatData: any = {
+        registrationId: reg._id,
+        registrantName: reg.registrantName,
+        registrantEmail: reg.registrantEmail,
+        status: reg.status,
+        registeredAt: reg.registeredAt,
+      };
+      // Add all form field responses
+      for (const field of event.formFields) {
+        const value = reg.responses[field.fieldId];
+        flatData[field.label] = Array.isArray(value)
+          ? value.join(", ")
+          : value || "";
+      }
+      return flatData;
+    });
+    return exportData;
+  }
 }
 
 export default new EventRegistrationService();

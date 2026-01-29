@@ -175,40 +175,40 @@ class EventController {
     }
   }
 
-  // // Delete event
-  // async deleteEvent(req: Request, res: Response) {
-  //   try {
-  //     const { eventId } = req.params;
-  //     const churchId = req.user?.churchId;
+  // Delete event
+  async deleteEvent(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params;
+      const churchId = req.user?.userId;
 
-  //     if (!churchId) {
-  //       return res.status(401).json({
-  //         success: false,
-  //         message: "Unauthorized",
-  //       });
-  //     }
+      if (!churchId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
 
-  //     const deleted = await eventService.deleteEvent(eventId, churchId);
+      const deleted = await eventService.deleteEvent(eventId, churchId);
 
-  //     if (!deleted) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: "Event not found",
-  //       });
-  //     }
+      if (!deleted) {
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+        });
+      }
 
-  //     res.status(200).json({
-  //       success: true,
-  //       message: "Event deleted successfully",
-  //     });
-  //   } catch (error: any) {
-  //     console.error("Delete event error:", error);
-  //     res.status(500).json({
-  //       success: false,
-  //       message: error.message || "Failed to delete event",
-  //     });
-  //   }
-  // }
+      res.status(200).json({
+        success: true,
+        message: "Event deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Delete event error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to delete event",
+      });
+    }
+  }
 
   // Update event status
   async updateEventStatus(req: Request, res: Response) {
