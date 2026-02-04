@@ -60,7 +60,7 @@ export class MessageService {
       });
       await AgendaScheduler.scheduleJob(
         message._id.toString(),
-        data.scheduleAt
+        data.scheduleAt,
       );
       return ApiSuccess.ok("Message scheduled successfully", { message });
     }
@@ -89,15 +89,11 @@ export class MessageService {
         html: data.message,
       };
 
-      console.log({
-        tttt: payload,
-        rrrr: emailPayload,
-      });
-
       // console.log(emailPayload);
       // Directly delegate to the right provider
       switch (data.messageType) {
         case "sms":
+          // return await MessageSender.sendBulkSMSV2(payload, 4);  this is to know whihc first 100 it should start from
           return await MessageSender.sendBulkSMSV2(payload);
         case "email":
           console.log({
@@ -145,7 +141,7 @@ export class MessageService {
       status: "active",
     }).lean();
     const deduped = Array.from(
-      new Map(contacts.map((c) => [c.phoneNumber || c.email, c])).values()
+      new Map(contacts.map((c) => [c.phoneNumber || c.email, c])).values(),
     );
 
     // Deliver
@@ -161,7 +157,7 @@ export class MessageService {
           default:
             return Promise.resolve(false);
         }
-      })
+      }),
     );
     console.log({ results });
     // const successCount = results.filter(
@@ -304,7 +300,7 @@ export class MessageService {
       now.getDate(),
       0,
       0,
-      0
+      0,
     );
     const endOfToday = new Date(
       now.getFullYear(),
@@ -312,7 +308,7 @@ export class MessageService {
       now.getDate(),
       23,
       59,
-      59
+      59,
     );
 
     // Get all scheduled messages for today
