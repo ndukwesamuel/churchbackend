@@ -78,8 +78,8 @@ router.post("/bulk", async (req: any, res: any) => {
   try {
     const userId = "68ac829be946f83f3d26c99a"; //req.user?.id; // your auth middleware — adjust to match yours
 
-    let groupId = "68fcfe670b3bb332ef503fbf";
-    const { contacts } = req.body;
+    // let groupId = "68fcfe680b3bb332ef503fc0";
+    const { groupId, contacts } = req.body;
 
     // ── Validation ──
     if (!groupId) {
