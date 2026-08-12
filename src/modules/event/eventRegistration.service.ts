@@ -1,8 +1,17 @@
 // services/eventRegistration.service.ts
 import type { IEventRegistration } from "./eventRegistration.interface"; //"../models/eventRegistration.interface";
 import type { IFormField } from "./event.interface"; //"../models/event.interface";
+import QRCode from "qrcode";
 import eventModel from "./event.model";
 import eventRegistrationModel from "./eventRegistration.model";
+
+// Escapes regex special characters in a string so it can be used safely
+// inside a $regex query. Names commonly contain characters like ".", "(",
+// ")", "-" (e.g. "Ijitimehin (Jr.)") which would otherwise be interpreted
+// as regex syntax instead of literal text.
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 class EventRegistrationService {
   //   Register for an event
@@ -40,9 +49,18 @@ class EventRegistrationService {
     }
     // Check for duplicate registration
     if (!event.allowMultipleRegistrations) {
+      // Match on BOTH email and name (case-insensitive) rather than email
+      // alone. Families/groups often share one email address (e.g. a
+      // parent's email for several children), so email alone is too broad
+      // and would block legitimate distinct registrants. Matching on the
+      // pair still catches an accidental re-upload of the same person.
       const existingRegistration = await eventRegistrationModel.findOne({
         eventId,
         registrantEmail: registrantEmail.toLowerCase(),
+        registrantName: {
+          $regex: `^${escapeRegExp(registrantName.trim())}$`,
+          $options: "i",
+        },
       });
       if (existingRegistration) {
         throw new Error("You have already registered for this event");
@@ -168,11 +186,15 @@ class EventRegistrationService {
     filters?: {
       status?: "pending" | "confirmed" | "cancelled" | "attended";
       search?: string;
+      checkedIn?: boolean;
     },
   ): Promise<IEventRegistration[]> {
     const query: any = { eventId, churchId };
     if (filters?.status) {
       query.status = filters.status;
+    }
+    if (filters?.checkedIn !== undefined) {
+      query.checkedIn = filters.checkedIn;
     }
     if (filters?.search) {
       query.$or = [
@@ -199,6 +221,178 @@ class EventRegistrationService {
       .lean();
     return registration as IEventRegistration | null;
   }
+
+  // Generates a QR code (as a base64 PNG data URL) for a registration.
+  // The payload is just enough to identify the registration on scan — it
+  // isn't a security boundary itself; the scan/check-in endpoint it's used
+  // against is admin-only (isAuth), so trust is enforced there, not in the
+  // QR contents.
+  private async generateQRCodeDataUrl(
+    registrationId: string,
+    eventId: string,
+  ): Promise<string> {
+    const payload = JSON.stringify({ registrationId, eventId });
+    return QRCode.toDataURL(payload, {
+      errorCorrectionLevel: "M",
+      margin: 2,
+      width: 300,
+    });
+  }
+
+  // Full profile for a single registrant: the raw registration, form
+  // responses relabeled using the event's formFields (so the admin sees
+  // "What is the name of your church?" instead of a fieldId), and a QR
+  // code for check-in scanning.
+  async getRegistrationProfile(
+    registrationId: string,
+    churchId: string,
+  ): Promise<{
+    registration: IEventRegistration;
+    formattedResponses: Record<string, any>;
+    qrCode: string;
+  } | null> {
+    const registration = await eventRegistrationModel
+      .findOne({ _id: registrationId, churchId })
+      .lean();
+    if (!registration) {
+      return null;
+    }
+
+    const event = await eventModel.findOne({
+      _id: registration.eventId,
+      churchId,
+    });
+
+    const formattedResponses: Record<string, any> = {};
+    if (event) {
+      for (const field of event.formFields) {
+        const value = registration.responses[field.fieldId];
+        formattedResponses[field.label] = Array.isArray(value)
+          ? value.join(", ")
+          : (value ?? "");
+      }
+    }
+
+    const qrCode = await this.generateQRCodeDataUrl(
+      registration._id.toString(),
+      registration.eventId.toString(),
+    );
+
+    return {
+      registration: registration as IEventRegistration,
+      formattedResponses,
+      qrCode,
+    };
+  }
+
+  // Just the QR code for a registration, as a raw PNG buffer — for
+  // endpoints that want to serve `image/png` directly (printing, <img>
+  // src) rather than embedding a data URL in JSON.
+  async getRegistrationQRCodeBuffer(
+    registrationId: string,
+    churchId: string,
+  ): Promise<Buffer | null> {
+    const registration = await eventRegistrationModel
+      .findOne({ _id: registrationId, churchId })
+      .select("_id eventId")
+      .lean();
+    if (!registration) {
+      return null;
+    }
+    const payload = JSON.stringify({
+      registrationId: registration._id.toString(),
+      eventId: registration.eventId.toString(),
+    });
+    return QRCode.toBuffer(payload, {
+      errorCorrectionLevel: "M",
+      margin: 2,
+      width: 300,
+    });
+  }
+
+  // Toggles check-in state for a registration — this is what the QR scan
+  // action calls. First scan: "in". Next scan of the same person: "out".
+  // And so on, alternating. Every scan is appended to checkInHistory so
+  // admins can see a full in/out log, not just the current state.
+  //
+  // This is done as a single atomic findOneAndUpdate using an aggregation
+  // pipeline, rather than read-then-modify-then-save. With read-then-save,
+  // two near-simultaneous scans (two staff members, a slow network, a
+  // double-tap) could both read checkedIn:false before either write lands,
+  // and both would write "in" instead of alternating in/out. MongoDB
+  // serializes concurrent updates to the same document, and each stage
+  // here computes the new checkedIn/action/status from whatever the
+  // CURRENTLY STORED value is at the moment that specific update actually
+  // runs — not from a value read earlier in application code — so this
+  // can't happen. (Requires MongoDB 4.2+ / Mongoose 5.10+ for pipeline
+  // updates in findOneAndUpdate.)
+  //
+  // Eligibility is enforced in the same atomic step via the query filter:
+  // only registrations with status "confirmed" or already "attended" can
+  // be checked in. Cancelled or still-pending-approval registrations are
+  // rejected rather than silently let through.
+  async toggleCheckIn(
+    registrationId: string,
+    churchId: string,
+  ): Promise<
+    | { ok: true; registration: IEventRegistration; action: "in" | "out" }
+    | { ok: false; reason: "not_found" | "cancelled" | "pending" }
+  > {
+    const registration = await eventRegistrationModel.findOneAndUpdate(
+      {
+        _id: registrationId,
+        churchId,
+        status: { $in: ["confirmed", "attended"] },
+      },
+      [
+        {
+          $set: {
+            checkedIn: { $not: ["$checkedIn"] },
+            // A person who has checked in at all has attended — keep this
+            // set on both check-in and check-out so the existing `status`
+            // field stays meaningful for admins who only look at that.
+            status: "attended",
+            checkInHistory: {
+              $concatArrays: [
+                "$checkInHistory",
+                [
+                  {
+                    action: { $cond: ["$checkedIn", "out", "in"] },
+                    timestamp: "$$NOW",
+                  },
+                ],
+              ],
+            },
+          },
+        },
+      ],
+      { new: true },
+    );
+
+    if (registration) {
+      const action: "in" | "out" = registration.checkedIn ? "in" : "out";
+      return { ok: true, registration, action };
+    }
+
+    // The filter didn't match — figure out why, for a precise error
+    // message. This second read has a small race window of its own, but
+    // it's only used for messaging, not for the check-in decision itself
+    // (which already happened atomically above), so it doesn't reintroduce
+    // the bug this method exists to fix.
+    const existing = await eventRegistrationModel
+      .findOne({ _id: registrationId, churchId })
+      .select("status")
+      .lean();
+
+    if (!existing) {
+      return { ok: false, reason: "not_found" };
+    }
+    if (existing.status === "cancelled") {
+      return { ok: false, reason: "cancelled" };
+    }
+    return { ok: false, reason: "pending" };
+  }
+
   // Update registration status
   async updateRegistrationStatus(
     registrationId: string,
@@ -243,17 +437,27 @@ class EventRegistrationService {
     });
     return true;
   }
-  // Get registration by email and event
+  // Get registration by email (and optionally name) for a given event.
+  // When multiple registrants can share one email (allowMultipleRegistrations,
+  // or the email+name duplicate policy), email alone no longer uniquely
+  // identifies a person — pass `name` whenever you're checking on behalf of
+  // a specific individual, not just "does this email have any registration".
   async getRegistrationByEmail(
     eventId: string,
     email: string,
+    name?: string,
   ): Promise<IEventRegistration | null> {
-    const registration = await eventRegistrationModel
-      .findOne({
-        eventId,
-        registrantEmail: email.toLowerCase(),
-      })
-      .lean();
+    const query: any = {
+      eventId,
+      registrantEmail: email.toLowerCase(),
+    };
+    if (name) {
+      query.registrantName = {
+        $regex: `^${escapeRegExp(name.trim())}$`,
+        $options: "i",
+      };
+    }
+    const registration = await eventRegistrationModel.findOne(query).lean();
     return registration as IEventRegistration | null;
   }
   // Export registrations (get data for CSV export)
@@ -268,12 +472,22 @@ class EventRegistrationService {
       .lean();
     // Flatten responses for CSV export
     const exportData = registrations.map((reg) => {
+      // Summarize check-in history into flat, CSV-friendly fields rather
+      // than dumping the raw array — a spreadsheet column can't usefully
+      // hold nested objects.
+      const inEvents = reg.checkInHistory.filter((h) => h.action === "in");
+      const lastEvent = reg.checkInHistory[reg.checkInHistory.length - 1];
+
       const flatData: any = {
         registrationId: reg._id,
         registrantName: reg.registrantName,
         registrantEmail: reg.registrantEmail,
         status: reg.status,
         registeredAt: reg.registeredAt,
+        checkedIn: reg.checkedIn ? "Yes" : "No",
+        totalCheckIns: inEvents.length,
+        lastCheckInOutAction: lastEvent ? lastEvent.action : "",
+        lastCheckInOutAt: lastEvent ? lastEvent.timestamp : "",
       };
       // Add all form field responses
       for (const field of event.formFields) {

@@ -112,6 +112,10 @@ class EventService {
       ).length,
       attendedCount: registrations.filter((r) => r.status === "attended")
         .length,
+      // Live headcount — how many people are checked in RIGHT NOW, as
+      // opposed to attendedCount above which is "ever showed up" and
+      // doesn't drop when someone checks out.
+      currentlyCheckedIn: registrations.filter((r) => r.checkedIn).length,
       capacity: event.capacity,
       availableSpots: event.capacity
         ? event.capacity - registrations.length

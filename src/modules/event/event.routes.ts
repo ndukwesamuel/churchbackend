@@ -68,6 +68,15 @@ router
   .post(eventRegistrationController.registerForEvent)
   .all(methodNotAllowed);
 
+  router
+  .route("/bulk-upload/:eventId")
+  .post(isAuth,eventRegistrationController.bulkUploadRegistrations)
+  .all(methodNotAllowed);
+
+
+
+  
+
 router.get(
   "/public/check/:eventId",
   eventRegistrationController.checkRegistration,
@@ -77,6 +86,27 @@ router.get(
   "/registration/:registrationId",
   isAuth,
   eventRegistrationController.getRegistration,
+);
+
+// Full profile (registration + relabeled responses + QR code data URL)
+router.get(
+  "/registration/:registrationId/profile",
+  isAuth,
+  eventRegistrationController.getRegistrationProfile,
+);
+
+// Raw QR code image (image/png) — for printing/embedding directly
+router.get(
+  "/registration/:registrationId/qrcode",
+  isAuth,
+  eventRegistrationController.getRegistrationQRCode,
+);
+
+// Scan action — toggles check-in / check-out
+router.post(
+  "/registration/:registrationId/checkin",
+  isAuth,
+  eventRegistrationController.checkInRegistration,
 );
 
 export default router;

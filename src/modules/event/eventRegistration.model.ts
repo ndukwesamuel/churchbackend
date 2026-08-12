@@ -2,6 +2,21 @@
 import mongoose, { Schema } from "mongoose";
 import type { IEventRegistration } from "./eventRegistration.interface";
 
+const CheckInEventSchema = new Schema(
+  {
+    action: {
+      type: String,
+      enum: ["in", "out"],
+      required: true,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false },
+);
+
 const EventRegistrationSchema: Schema<IEventRegistration> = new Schema(
   {
     eventId: {
@@ -39,6 +54,14 @@ const EventRegistrationSchema: Schema<IEventRegistration> = new Schema(
       type: String,
       enum: ["pending", "confirmed", "cancelled", "attended"],
       default: "confirmed",
+    },
+    checkedIn: {
+      type: Boolean,
+      default: false,
+    },
+    checkInHistory: {
+      type: [CheckInEventSchema],
+      default: [],
     },
     registeredAt: {
       type: Date,
