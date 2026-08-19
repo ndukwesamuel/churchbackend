@@ -717,6 +717,38 @@ class EventRegistrationController {
           if (!registrantEmail) throw new Error("Email field not found or empty in file");
           if (!registrantName) throw new Error("Name field not found or empty in file");
 
+          // Backfill: the event's own custom fields are entirely admin-defined
+          // — there's nothing static about their labels or fieldIds. An admin
+          // might configure a single required "Full Name" question instead of
+          // relying on separate First Name/Surname columns, or an "Email"
+          // question with different wording than the spreadsheet header. If a
+          // field represents identity data we ALREADY derived above but no
+          // spreadsheet column literally matched its label/fieldId text, fill
+          // it in from what we know rather than letting validation fail on a
+          // technicality. Only touches fields still empty — never overwrites
+          // an actual answer from the spreadsheet — and only matches on
+          // unambiguous signals (declared fieldType "email", or a label from
+          // the same exact name-header set used above) so it can't misfire on
+          // an unrelated question like "What is the name of your church?".
+          for (const field of event.formFields) {
+            const existing = responses[field.fieldId];
+            const isEmpty =
+              existing === undefined ||
+              existing === null ||
+              existing === "" ||
+              (Array.isArray(existing) && existing.length === 0);
+            if (!isEmpty) continue;
+
+            if (field.fieldType === "email") {
+              responses[field.fieldId] = registrantEmail;
+            } else if (
+              FULL_NAME_HEADERS.has(normalize(field.label)) ||
+              FULL_NAME_HEADERS.has(normalize(field.fieldId))
+            ) {
+              responses[field.fieldId] = registrantName;
+            }
+          }
+
           const registration = await eventRegistrationService.registerForEvent({
             eventId,
             responses,
@@ -763,4 +795,4 @@ class EventRegistrationController {
   }
 }
 
-export default new EventRegistrationController(); 
+export default new EventRegistrationController();
