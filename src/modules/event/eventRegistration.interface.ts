@@ -21,6 +21,11 @@ export interface IEventRegistration extends Document {
   // Status
   status: "pending" | "confirmed" | "cancelled" | "attended";
 
+  // Optional group this registrant has been manually assigned to, plus the
+  // tag handed out on assignment (e.g. group "Samheart" -> "S01", "S02", ...)
+  groupId?: mongoose.Types.ObjectId;
+  groupCode?: string;
+
   // Check-in / check-out tracking (QR scan toggles this)
   checkedIn: boolean;
   checkInHistory: ICheckInEvent[];

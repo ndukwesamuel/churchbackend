@@ -55,6 +55,15 @@ const EventRegistrationSchema: Schema<IEventRegistration> = new Schema(
       enum: ["pending", "confirmed", "cancelled", "attended"],
       default: "confirmed",
     },
+    groupId: {
+      type: Schema.Types.ObjectId,
+      ref: "EventGroup",
+      default: null,
+    },
+    groupCode: {
+      type: String,
+      default: null,
+    },
     checkedIn: {
       type: Boolean,
       default: false,
@@ -76,6 +85,7 @@ const EventRegistrationSchema: Schema<IEventRegistration> = new Schema(
 // Compound index for queries
 EventRegistrationSchema.index({ eventId: 1, churchId: 1, status: 1 });
 EventRegistrationSchema.index({ eventId: 1, registrantEmail: 1 });
+EventRegistrationSchema.index({ eventId: 1, groupId: 1 });
 
 export default mongoose.model<IEventRegistration>(
   "EventRegistration",

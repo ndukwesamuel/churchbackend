@@ -187,6 +187,7 @@ class EventRegistrationService {
       status?: "pending" | "confirmed" | "cancelled" | "attended";
       search?: string;
       checkedIn?: boolean;
+      groupId?: string;
     },
   ): Promise<IEventRegistration[]> {
     const query: any = { eventId, churchId };
@@ -195,6 +196,9 @@ class EventRegistrationService {
     }
     if (filters?.checkedIn !== undefined) {
       query.checkedIn = filters.checkedIn;
+    }
+    if (filters?.groupId) {
+      query.groupId = filters.groupId === "none" ? null : filters.groupId;
     }
     if (filters?.search) {
       query.$or = [

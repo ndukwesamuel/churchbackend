@@ -58,7 +58,7 @@ class EventRegistrationController {
         });
       }
 
-      const { status, search, checkedIn } = req.query;
+      const { status, search, checkedIn, groupId } = req.query;
 
       const filters: any = {};
       if (status) filters.status = status;
@@ -66,6 +66,8 @@ class EventRegistrationController {
       // ?checkedIn=true|false — e.g. "who's currently in the building"
       if (checkedIn === "true") filters.checkedIn = true;
       if (checkedIn === "false") filters.checkedIn = false;
+      // ?groupId=<id> — members of one group; ?groupId=none — unassigned
+      if (groupId) filters.groupId = groupId as string;
 
       const registrations =
         await eventRegistrationService.getEventRegistrations(
@@ -391,6 +393,94 @@ class EventRegistrationController {
       res.status(500).json({
         success: false,
         message: error.message || "Failed to delete registration",
+      });
+    }
+  }
+
+  // TEMPORARY — no auth, hardcoded to one event for a one-off frontend
+  // test. Requested 2026-08-24, remove by end of September 2026.
+  // Deliberately does NOT take eventId/churchId from the request (query,
+  // params, anything) — they're fixed here so this can't be used to pull
+  // registrant data for any other event.
+  async getPublicTestRegistrations(req: Request, res: Response) {
+    try {
+      const eventId = "6a8aabdbf1694061433d8cda";
+      const churchId = "68ac829be946f83f3d26c99a";
+
+      const registrations = await eventRegistrationService.getEventRegistrations(
+        eventId,
+        churchId,
+      );
+
+      res.status(200).json({
+        success: true,
+        data: registrations,
+        count: registrations.length,
+      });
+    } catch (error: any) {
+      console.error("Public test registrations error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to fetch registrations",
+      });
+    }
+  }
+
+  // TEMPORARY — no auth, same one-off test as getPublicTestRegistrations
+  // above. Toggles check-in/out for one registration, same as the admin
+  // scan endpoint, but churchId is hardcoded rather than read from a
+  // logged-in user, so anyone with a registrationId can call this — only
+  // safe because it's scoped to this one event and short-lived (remove by
+  // end of September 2026).
+  async checkInRegistrationPublicTest(req: Request, res: Response) {
+    try {
+      const { registrationId } = req.params;
+      const churchId = "68ac829be946f83f3d26c99a";
+
+      const result = await eventRegistrationService.toggleCheckIn(
+        registrationId,
+        churchId,
+      );
+
+      if (!result.ok) {
+        if (result.reason === "not_found") {
+          return res.status(404).json({
+            success: false,
+            message: "Registration not found",
+          });
+        }
+        if (result.reason === "cancelled") {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This registration was cancelled and cannot be checked in.",
+          });
+        }
+        return res.status(409).json({
+          success: false,
+          message:
+            "This registration is pending approval and must be confirmed before check-in.",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message:
+          result.action === "in"
+            ? `${result.registration.registrantName} checked in`
+            : `${result.registration.registrantName} checked out`,
+        data: {
+          action: result.action,
+          checkedIn: result.registration.checkedIn,
+          registrantName: result.registration.registrantName,
+          registrationId: result.registration._id,
+        },
+      });
+    } catch (error: any) {
+      console.error("Public test check-in error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to process check-in",
       });
     }
   }
